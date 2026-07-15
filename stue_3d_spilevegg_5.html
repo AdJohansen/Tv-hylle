@@ -1,0 +1,1005 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Stue/Kjøkken 6,51 × 4,49 m · Spilevegg + S90F 65"</title>
+<style>
+  :root{
+    --bg:#141210; --panel:#1f1b17; --line:#3a332c;
+    --text:#e8e0d4; --dim:#9a8f7f; --accent:#c98f4e;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%;overflow:hidden;background:var(--bg);
+    font-family:"Segoe UI",system-ui,-apple-system,sans-serif;color:var(--text)}
+  #scene{position:fixed;inset:0;touch-action:none;cursor:grab}
+  #scene:active{cursor:grabbing}
+
+  header{position:fixed;top:0;left:0;right:0;padding:14px 18px;
+    display:flex;justify-content:space-between;align-items:baseline;
+    pointer-events:none;z-index:5;
+    background:linear-gradient(to bottom, rgba(20,18,16,.85), transparent)}
+  header h1{font-size:15px;font-weight:600;letter-spacing:.04em}
+  header h1 span{color:var(--accent)}
+  header p{font-size:11px;color:var(--dim)}
+
+  #specs{position:fixed;left:12px;bottom:12px;z-index:5;
+    background:rgba(31,27,23,.92);border:1px solid var(--line);border-radius:10px;
+    padding:12px 14px;font-size:12px;line-height:1.75;max-width:240px;
+    backdrop-filter:blur(6px)}
+  #specs b{color:var(--accent);font-weight:600}
+  #specs .row{display:flex;justify-content:space-between;gap:14px}
+  #specs .row span:last-child{color:var(--text);font-variant-numeric:tabular-nums}
+  #specs .row span:first-child{color:var(--dim)}
+
+  #controls{position:fixed;right:12px;bottom:12px;z-index:5;display:flex;
+    flex-direction:column;gap:8px}
+  #controls button{background:rgba(31,27,23,.92);border:1px solid var(--line);
+    color:var(--text);border-radius:10px;padding:10px 14px;font-size:12.5px;
+    cursor:pointer;backdrop-filter:blur(6px);text-align:left;min-width:150px}
+  #controls button:active{background:#2b251f}
+  #controls button.off{color:var(--dim)}
+  #controls button b{color:var(--accent)}
+  #controls .btnrow{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  #controls .btnrow button{min-width:112px;text-align:center;padding:9px 6px;
+    font-size:11.5px}
+  #btnToggleUI{align-self:flex-end;min-width:0;padding:7px 12px;font-size:11.5px}
+  #ctrlBody{display:flex;flex-direction:column;gap:8px}
+  #ctrlBody.hidden{display:none}
+
+  #sliderBox{background:rgba(31,27,23,.92);border:1px solid var(--line);
+    border-radius:10px;padding:10px 14px;backdrop-filter:blur(6px)}
+  #sliderBox label{display:block;font-size:12px;margin-bottom:6px;color:var(--text)}
+  #sliderBox label b{color:var(--accent)}
+  #sliderBox span{color:var(--dim);font-variant-numeric:tabular-nums}
+  #sliderBox input[type=range]{width:100%;accent-color:var(--accent);cursor:pointer}
+  #sliderBox label.mt{margin-top:10px}
+
+  #colorBox{background:rgba(31,27,23,.92);border:1px solid var(--line);
+    border-radius:10px;padding:10px 14px;backdrop-filter:blur(6px)}
+  #colorBox .crow{display:flex;justify-content:space-between;align-items:center;
+    font-size:12px;color:var(--text);gap:14px;margin:5px 0}
+  #colorBox input[type=color]{width:40px;height:24px;border:1px solid var(--line);
+    border-radius:6px;background:none;cursor:pointer;padding:0}
+
+  .pickbox{background:rgba(31,27,23,.92);border:1px solid var(--line);
+    border-radius:10px;padding:10px 12px;backdrop-filter:blur(6px)}
+  .pickbox .vlabel{font-size:12px;color:var(--text);margin-bottom:7px}
+  .pickbox .vlabel b{color:var(--accent)}
+  .pickbox .vbtns{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+  .pickbox .vbtns button{background:#2b251f;border:1px solid var(--line);
+    color:var(--dim);border-radius:8px;padding:7px 4px;font-size:11.5px;
+    cursor:pointer;text-align:center;min-width:0}
+  .pickbox .vbtns button.active{color:var(--text);border-color:var(--accent);
+    background:#3a2f22}
+
+  #hint{position:fixed;bottom:12px;left:50%;transform:translateX(-50%);
+    font-size:11px;color:var(--dim);z-index:4;pointer-events:none;
+    transition:opacity 1s}
+  @media(max-width:640px){
+    #hint{display:none}
+    #specs{display:none}                       /* skjules når telefonmenyen er i bruk */
+    /* Telefonmeny: full bredde nederst, valgene som rullbart bunnark */
+    #controls{left:0;right:0;bottom:0;padding:8px;gap:8px;align-items:stretch;z-index:6}
+    #btnToggleUI{align-self:stretch;text-align:center;padding:13px;font-size:14px;
+      font-weight:600;border-radius:12px;min-width:0}
+    #ctrlBody{max-height:64vh;overflow-y:auto;-webkit-overflow-scrolling:touch;
+      background:rgba(20,18,16,.72);border:1px solid var(--line);border-radius:12px;
+      padding:8px}
+    #controls button{min-width:auto;padding:11px 12px;font-size:13px}
+    #controls .btnrow button{padding:11px 6px;font-size:12.5px}
+  }
+</style>
+</head>
+<body>
+<canvas id="scene"></canvas>
+
+<header>
+  <h1>STUE/KJØKKEN <span>6,51 × 4,49/5,04 m</span></h1>
+  <p>Venstre-dra: rotér · Høyre-dra / WASD: flytt · Rull: zoom</p>
+</header>
+
+<div id="specs">
+  <div class="row"><span>Kjøkkenside</span><span>5,04 m</span></div>
+  <div class="row"><span>Sofavegg</span><span>4,49 m</span></div>
+  <div class="row"><span>Bredde</span><span>6,51 m</span></div>
+  <div class="row"><span>Spilevegg</span><span><b>romdeler 2,0 m</b></span></div>
+  <div class="row"><span>Spiler</span><span id="specN">29 stk · 45 mm</span></div>
+  <div class="row"><span>Mellomrom</span><span id="specGap">25 mm</span></div>
+  <div class="row"><span>TV-senter</span><span>1100 mm</span></div>
+</div>
+
+<div id="controls">
+  <button id="btnToggleUI">Skjul valg ▾</button>
+  <div id="ctrlBody">
+  <div id="typeBox" class="pickbox">
+    <div class="vlabel"><b>Romdeler</b></div>
+    <div class="vbtns">
+      <button data-type="spile" class="active">Spilevegg</button>
+      <button data-type="hylle">Hylle</button>
+    </div>
+  </div>
+  <div id="fasongBox" class="pickbox" style="display:none">
+    <div class="vlabel"><b>Hylle-fasong</b></div>
+    <div class="vbtns">
+      <button data-fasong="0" class="active">Hvit</button>
+      <button data-fasong="1">Tre-grid</button>
+    </div>
+  </div>
+  <div id="sliderBox">
+    <label><b>Plassering</b><br><span id="divVal"></span></label>
+    <input type="range" id="divSlider" min="3.15" max="3.7" step="0.02" value="3.15">
+    <div id="slatControls">
+      <label class="mt"><b>Spilebredde</b> · <span id="slatVal">45 mm</span></label>
+      <input type="range" id="slatSlider" min="20" max="95" step="1" value="45">
+      <label class="mt"><b>Mellomrom</b> · <span id="gapVal">25 mm</span></label>
+      <input type="range" id="gapSlider" min="5" max="80" step="1" value="25">
+    </div>
+  </div>
+  <div id="colorBox">
+    <label class="crow"><span>Vegg &amp; tak</span><input type="color" id="wallColor" value="#d9d2c6"></label>
+    <label class="crow"><span>Kjøkken</span><input type="color" id="kitchenColor" value="#2c2c2e"></label>
+    <label class="crow"><span>Fliser kjøkken</span><input type="color" id="backsplashColor" value="#f4f4f2"></label>
+  </div>
+  <div id="vibeBox" class="pickbox">
+    <div class="vlabel"><b>Stemning</b> · lys ute &amp; inne</div>
+    <div class="vbtns">
+      <button data-vibe="0">Dag</button>
+      <button data-vibe="1">Solnedgang</button>
+      <button data-vibe="2">Kveld</button>
+      <button data-vibe="3">Overskyet</button>
+    </div>
+  </div>
+  <div class="btnrow">
+    <button id="btnTV"><b>TV</b> · på</button>
+    <button id="btnFurn"><b>Møbler</b> · på</button>
+  </div>
+  <div class="btnrow" id="spileButtons">
+    <button id="btnBench"><b>TV-benk</b> · hengende</button>
+    <button id="btnShelves" class="off"><b>Hyller</b> · av</button>
+  </div>
+  <button id="btnWood"><b>Treslag</b> · eik</button>
+  <div class="btnrow">
+    <button id="btnViewSofa"><b>Sofahjørne</b></button>
+    <button id="btnViewKitchen"><b>Kjøkkenhjørne</b></button>
+  </div>
+  <button id="btnReset"><b>Nullstill alt</b></button>
+  </div>
+</div>
+
+<div id="hint">Én finger: rotér · to fingre: flytt og zoom</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+/* ============================================================
+   Stue/Kjøkken fra plantegning — alle mål i meter.
+   Rom: 6,51 (X, øst-vest) × 4,49 (Z, nord-sør) × 2,4 høyt.
+   Nord (z=0): balkongvegg med glass. Vest (x=0): kjøkken.
+   Sør (z=4,49): vegg mot gang/soverom med åpning.
+   Spilevegg: frittstående romdeler ved x=3,2, fra sørveggen
+   2,0 m inn i rommet (den røde streken). TV mot stuedelen.
+   ============================================================ */
+
+const canvas = document.getElementById('scene');
+const renderer = new THREE.WebGLRenderer({canvas, antialias:true});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.outputEncoding = THREE.sRGBEncoding;
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x141210);
+
+const camera = new THREE.PerspectiveCamera(55, 1, 0.05, 80);
+
+/* ---------- Mål ---------- */
+const RW = 6.51;                          // rombredde øst-vest
+const RD = 4.49;                          // dybde på østsiden (veggen bak sofaen)
+const RD2 = 5.04;                         // dybde på vestsiden (kjøkkensiden)
+const XSTEP = 3.2;                        // der sørveggen trapper (hjørnet ved gangen)
+const RH = 2.40;                          // takhøyde
+const DIV_X = 3.2;                        // spilevegg-posisjon (rød strek)
+const DIV_LEN = 2.0;                      // 2 m ut fra sørveggen
+const SLAT_W = 0.045, SLAT_D = 0.028, N = 29;
+const GAP = (DIV_LEN - N*SLAT_W)/(N-1);   // 24,8 mm
+
+/* ---------- Materialer ---------- */
+const WOODS = [
+  {name:'eik',            color:0xb98a5a, rough:0.62},
+  {name:'sort eik',       color:0x3a2e24, rough:0.55},
+  {name:'valnøtt',        color:0x7a5236, rough:0.6},
+  {name:'hvitpigmentert', color:0xd8c4a6, rough:0.68},
+];
+let woodIndex = 0;
+const slatMat  = new THREE.MeshStandardMaterial({color:WOODS[0].color, roughness:WOODS[0].rough});
+const coreMat  = new THREE.MeshStandardMaterial({color:0x0b0a09, roughness:0.95});
+const wallMat  = new THREE.MeshStandardMaterial({color:0xd9d2c6, roughness:0.92});
+const floorMat = new THREE.MeshStandardMaterial({color:0x8a6a48, roughness:0.7});
+const ceilMat  = new THREE.MeshStandardMaterial({color:0xe6e0d6, roughness:0.95});
+const glassMat = new THREE.MeshStandardMaterial({color:0xa8c4d4, transparent:true, opacity:0.18, roughness:0.1, metalness:0.3});
+const frameMat = new THREE.MeshStandardMaterial({color:0x2a2a2a, roughness:0.6});
+const counterMat = new THREE.MeshStandardMaterial({color:0x2c2c2e, roughness:0.55});  // mørke kjøkkenfronter
+const backsplashMat = new THREE.MeshStandardMaterial({color:0xf4f4f2, roughness:0.3}); // hvit fliskant
+const worktopMat = new THREE.MeshStandardMaterial({color:0xecebe8, roughness:0.3});    // lys benkeplate
+const whiteMat = new THREE.MeshStandardMaterial({color:0xf1efe9, roughness:0.6});      // hvit hylle-ramme/skap
+const gridMat  = new THREE.MeshStandardMaterial({color:0x8f8b7d, roughness:0.5, metalness:0.35}); // metall-grid
+const steelMat   = new THREE.MeshStandardMaterial({color:0x9a9da0, roughness:0.35, metalness:0.6}); // stål
+const darkMat  = new THREE.MeshStandardMaterial({color:0x1a1a1a, roughness:0.4});
+const sofaMat  = new THREE.MeshStandardMaterial({color:0x3d2b1d, roughness:0.94}); // Sweef Gorilla · Lincoln Mørkebrun 29
+const rugMat   = new THREE.MeshStandardMaterial({color:0xc4b49a, roughness:0.95});
+const tvBodyMat   = new THREE.MeshStandardMaterial({color:0x121212, roughness:0.4, metalness:0.3});
+const tvScreenOff = new THREE.MeshStandardMaterial({color:0x050505, roughness:0.15, metalness:0.6});
+const tvScreenOn  = new THREE.MeshBasicMaterial({color:0x0e2a3f});
+
+/* ---------- Hjelper ---------- */
+function box(w, h, d, mat, x, y, z, parent=scene){
+  const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
+  m.position.set(x, y, z);
+  m.castShadow = m.receiveShadow = true;
+  parent.add(m);
+  return m;
+}
+
+/* ---------- Gulv og tak (L-form) ---------- */
+// Høyre del: 4,49 m dyp. Venstre del (kjøkkensiden): 5,04 m dyp.
+const floorR = new THREE.Mesh(new THREE.PlaneGeometry(RW - XSTEP, RD), floorMat);
+floorR.rotation.x = -Math.PI/2;
+floorR.position.set(XSTEP + (RW-XSTEP)/2, 0, RD/2);
+floorR.receiveShadow = true;
+scene.add(floorR);
+const floorL = new THREE.Mesh(new THREE.PlaneGeometry(XSTEP, RD2), floorMat);
+floorL.rotation.x = -Math.PI/2;
+floorL.position.set(XSTEP/2, 0, RD2/2);
+floorL.receiveShadow = true;
+scene.add(floorL);
+
+// Gulvbord-striper for litt liv
+const plankMat = new THREE.MeshStandardMaterial({color:0x7d5f40, roughness:0.75});
+for(let i=0;i<11;i++){
+  const z = 0.45*(i+0.5);
+  if(z > RD2) break;
+  const w = (z > RD) ? XSTEP : RW;              // striper i den dype delen er smalere
+  const p = new THREE.Mesh(new THREE.PlaneGeometry(w, 0.012), plankMat);
+  p.rotation.x = -Math.PI/2;
+  p.position.set(w/2, 0.001, z);
+  scene.add(p);
+}
+
+// Tak — kun synlig nedenfra, så du kan se ned i rommet ovenfra
+const ceilR = new THREE.Mesh(new THREE.PlaneGeometry(RW - XSTEP, RD), ceilMat);
+ceilR.rotation.x = Math.PI/2;
+ceilR.position.set(XSTEP + (RW-XSTEP)/2, RH, RD/2);
+scene.add(ceilR);
+const ceilL = new THREE.Mesh(new THREE.PlaneGeometry(XSTEP, RD2), ceilMat);
+ceilL.rotation.x = Math.PI/2;
+ceilL.position.set(XSTEP/2, RH, RD2/2);
+scene.add(ceilL);
+
+/* ---------- Vegger ---------- */
+const T = 0.1; // veggtykkelse
+
+// Vest (x=0): kjøkkenvegg, hel — 5,04 m lang
+box(T, RH, RD2+2*T, wallMat, -T/2, RH/2, RD2/2);
+
+// Øst (x=6,51): vegg bak sofaen — 4,49 m, med dypt vindu med "hylle"
+// Vinduet: 1,80 m langt, starter 8 cm fra sørveggen, nisje 30 cm dyp.
+// Brystning (hylle) i 1,0 m høyde, overkant 2,1 m — juster WIN_SILL/WIN_TOP ved behov.
+const WIN_L = 1.80, WIN_OFF = 0.08;
+const WIN_Z2 = RD - WIN_OFF;               // 4,41 (nærmest sofaveggen mot soverom)
+const WIN_Z1 = WIN_Z2 - WIN_L;             // 2,61
+const WIN_ZC = (WIN_Z1 + WIN_Z2)/2;
+const WIN_SILL = 1.0, WIN_TOP = 2.1;
+const WIN_D = 0.30;                        // nisjedybde = hylla
+
+// Veggsegmenter rundt åpningen
+box(T, RH, WIN_Z1, wallMat, RW+T/2, RH/2, WIN_Z1/2);                       // nord for vinduet
+box(T, RH, WIN_OFF, wallMat, RW+T/2, RH/2, WIN_Z2 + WIN_OFF/2);            // 8 cm-stripa mot sørveggen
+box(T, WIN_SILL, WIN_L, wallMat, RW+T/2, WIN_SILL/2, WIN_ZC);              // under vinduet
+box(T, RH-WIN_TOP, WIN_L, wallMat, RW+T/2, WIN_TOP+(RH-WIN_TOP)/2, WIN_ZC);// over vinduet
+
+// Nisjen — 30 cm dyp
+const sillMat = new THREE.MeshStandardMaterial({color:0xcdb894, roughness:0.55});
+box(WIN_D+T, 0.04, WIN_L, sillMat, RW+(WIN_D+T)/2, WIN_SILL-0.02, WIN_ZC); // hylla (vinduskarm)
+box(WIN_D, 0.03, WIN_L, wallMat, RW+T/2+WIN_D/2, WIN_TOP+0.015, WIN_ZC);   // topp i nisjen
+box(WIN_D, WIN_TOP-WIN_SILL, 0.03, wallMat, RW+T/2+WIN_D/2, (WIN_SILL+WIN_TOP)/2, WIN_Z1+0.015); // side nord
+box(WIN_D, WIN_TOP-WIN_SILL, 0.03, wallMat, RW+T/2+WIN_D/2, (WIN_SILL+WIN_TOP)/2, WIN_Z2-0.015); // side sør
+
+// Glass og ramme ytterst i nisjen
+const winGlass = new THREE.Mesh(new THREE.PlaneGeometry(WIN_L-0.08, WIN_TOP-WIN_SILL-0.08), glassMat);
+winGlass.rotation.y = -Math.PI/2;
+winGlass.position.set(RW+WIN_D-0.03, (WIN_SILL+WIN_TOP)/2, WIN_ZC);
+scene.add(winGlass);
+box(0.04, WIN_TOP-WIN_SILL, 0.05, frameMat, RW+WIN_D-0.02, (WIN_SILL+WIN_TOP)/2, WIN_Z1+0.05);
+box(0.04, WIN_TOP-WIN_SILL, 0.05, frameMat, RW+WIN_D-0.02, (WIN_SILL+WIN_TOP)/2, WIN_Z2-0.05);
+box(0.04, 0.05, WIN_L, frameMat, RW+WIN_D-0.02, WIN_SILL+0.045, WIN_ZC);
+box(0.04, 0.05, WIN_L, frameMat, RW+WIN_D-0.02, WIN_TOP-0.045, WIN_ZC);
+// "Dagslys" bak glasset
+const winSky = new THREE.Mesh(new THREE.PlaneGeometry(WIN_L, WIN_TOP-WIN_SILL),
+  new THREE.MeshBasicMaterial({color:0xd6e6ef}));
+winSky.rotation.y = -Math.PI/2;
+winSky.position.set(RW+WIN_D+0.02, (WIN_SILL+WIN_TOP)/2, WIN_ZC);
+scene.add(winSky);
+// Mykt lys inn gjennom vinduet
+const winLight = new THREE.PointLight(0xdceaf2, 0.35, 4);
+winLight.position.set(RW-0.3, 1.7, WIN_ZC);
+scene.add(winLight);
+const eastWin = new THREE.Mesh(new THREE.PlaneGeometry(1.4, 1.2),
+  new THREE.MeshBasicMaterial({color:0xcfe0ea}));
+eastWin.rotation.y = -Math.PI/2;
+eastWin.position.set(RW-0.001, 1.5, 1.6);
+scene.add(eastWin);
+box(0.04, 1.28, 1.48, frameMat, RW-0.02, 1.5, 1.6);
+const eastWin2 = new THREE.Mesh(new THREE.PlaneGeometry(1.4, 1.2),
+  new THREE.MeshBasicMaterial({color:0xcfe0ea}));
+eastWin2.rotation.y = -Math.PI/2;
+eastWin2.position.set(RW-0.021, 1.5, 1.6);
+scene.add(eastWin2);
+
+// Nord (z=0): balkongvegg — stor glassflate delt av én midtstolpe
+const WIN_SIDE = 0.55;                          // veggstubb hver side (20 cm mer enn før)
+const gh = RH - 0.35;                           // glasshøyde
+const postX = RW/2, postW = 0.06;               // den ene midtstolpen
+box(WIN_SIDE, RH, T, wallMat, WIN_SIDE/2, RH/2, -T/2);       // veggstubb vest
+box(WIN_SIDE, RH, T, wallMat, RW-WIN_SIDE/2, RH/2, -T/2);    // veggstubb øst
+box(RW, 0.3, T, wallMat, RW/2, RH-0.15, -T/2);              // felt over glass
+// To store glassfelt, kun delt i midten
+const paneW = (postX - postW/2) - WIN_SIDE;
+const leftC = WIN_SIDE + paneW/2;
+const rightC = RW - WIN_SIDE - paneW/2;
+for(const gx of [leftC, rightC]){
+  const g = new THREE.Mesh(new THREE.PlaneGeometry(paneW-0.02, gh), glassMat);
+  g.position.set(gx, gh/2 + 0.02, -0.02);
+  scene.add(g);
+}
+box(postW, RH-0.3, 0.06, frameMat, postX, (RH-0.3)/2, -0.03);     // midtstolpe
+box(RW-2*WIN_SIDE, 0.05, 0.06, frameMat, RW/2, 0.025, -0.03);     // karm bunn
+box(RW-2*WIN_SIDE, 0.05, 0.06, frameMat, RW/2, RH-0.32, -0.03);   // karm topp
+
+// Sør — trappet vegg:
+// Høyre del (mot soverom) ved z=4,49, fra hjørnet ved x=3,2 til østveggen
+box(RW-XSTEP, RH, T, wallMat, XSTEP+(RW-XSTEP)/2, RH/2, RD+T/2);
+// Hjørnestykke ved x=3,2 som forbinder de to dybdene (4,49 → 5,04).
+// Ligger på innsiden av linjen slik at det flukter med soveromsveggen
+// og ikke stikker ut i stuedelen.
+box(T, RH, RD2-RD, wallMat, XSTEP-T/2, RH/2, RD+(RD2-RD)/2);
+// Venstre del (mot bad/gang) ved z=5,04 — døråpningen er flyttet mot kjøkkenet
+// slik at det er plass til 2,5 lysbrytere (2,5 × 8,5 cm ≈ 21 cm) mellom
+// spilevegg-hjørnet (x=3,2) og dørkarmen.
+const SWITCH = 0.085;                       // bredde på én bryterramme
+const DOOR_GAP = 2.5 * SWITCH;              // ≈ 0,21 m veggstripe ved hjørnet
+const DOOR_W = 0.9;                         // døråpningens bredde
+const DOOR_E = XSTEP - DOOR_GAP;            // østkant av åpningen (x ≈ 2,99)
+const DOOR_V = DOOR_E - DOOR_W;             // vestkant av åpningen (x ≈ 2,09)
+box(DOOR_V, RH, T, wallMat, DOOR_V/2, RH/2, RD2+T/2);                      // vegg vest for åpningen
+box(DOOR_GAP, RH, T, wallMat, DOOR_E+DOOR_GAP/2, RH/2, RD2+T/2);           // bryterstripe ved hjørnet
+box(DOOR_W, RH-2.1, T, wallMat, DOOR_V+DOOR_W/2, 2.1+(RH-2.1)/2, RD2+T/2); // felt over døråpning
+// Lysbrytere på stripa (dobbel ramme, norsk høyde ca. 1,0 m)
+const switchMat = new THREE.MeshStandardMaterial({color:0xf2efe8, roughness:0.5});
+box(SWITCH-0.01, SWITCH-0.01, 0.014, switchMat, DOOR_E+DOOR_GAP/2 - SWITCH/2, 1.0, RD2-0.007);
+box(SWITCH-0.01, SWITCH-0.01, 0.014, switchMat, DOOR_E+DOOR_GAP/2 + SWITCH/2, 1.0, RD2-0.007);
+
+/* ---------- Balkong utenfor ---------- */
+const balc = new THREE.Mesh(new THREE.PlaneGeometry(RW, 2.2),
+  new THREE.MeshStandardMaterial({color:0x55504a, roughness:0.95}));
+balc.rotation.x = -Math.PI/2;
+balc.position.set(RW/2, -0.02, -1.2);
+balc.receiveShadow = true;
+scene.add(balc);
+for(let i=0;i<=12;i++){
+  box(0.03, 1.0, 0.03, frameMat, (RW/12)*i, 0.5, -2.3);
+}
+box(RW, 0.04, 0.06, frameMat, RW/2, 1.0, -2.3);
+
+/* ---------- Kjøkken langs vestveggen — flush fra vegg til vegg (z=0..5,04) ---------- */
+const KT = 2.25;                                        // høyde høyskap/overskap (gap til tak)
+const TALL = 1.0;                                       // bredde på hvert høyskap
+const baseZ0 = TALL, baseZ1 = RD2 - TALL;               // underskap-sonen mellom høyskapene
+const baseC = (baseZ0+baseZ1)/2, baseL = baseZ1-baseZ0; // senter 2,52 · lengde 3,04
+const hoodZ0 = baseC-0.25, hoodZ1 = baseC+0.25;         // viftesonen midt på
+// Høyskap flush i begge ender: kjøl/frys (nord) og stekeovnstårn (sør)
+box(0.62, KT, TALL, counterMat, 0.31, KT/2, TALL/2);            // høyskap kjøl/frys (nord, mot z=0)
+box(0.62, KT, TALL, counterMat, 0.31, KT/2, RD2-TALL/2);       // høyskap stekeovn (sør, mot z=5,04)
+// Fyllplate over kjøkkenet — samme farge, helt opp til taket
+box(0.62, RH-KT, RD2, counterMat, 0.01, (KT+RH)/2, RD2/2);     // topplate til tak
+// Underskap mellom høyskapene
+box(0.62, 0.88, baseL, counterMat, 0.31, 0.44, baseC);         // underskap
+// Lys benkeplate (tynn)
+box(0.66, 0.04, baseL+0.04, worktopMat, 0.32, 0.90, baseC);    // benkeplate
+// Hvit fliskant mellom benk og overskap
+box(0.03, 0.53, baseL, backsplashMat, 0.016, 1.185, baseC);
+// Overskap i to seksjoner med vifte i midten
+box(0.35, 0.80, hoodZ0-baseZ0, counterMat, 0.175, 1.85, (baseZ0+hoodZ0)/2);  // overskap nord
+box(0.35, 0.80, baseZ1-hoodZ1, counterMat, 0.175, 1.85, (hoodZ1+baseZ1)/2);  // overskap sør
+// Kjøkkenvifte (mørk) i midten
+box(0.30, 0.80, 0.50, darkMat, 0.15, 1.85, baseC);      // vifte-pipe
+box(0.46, 0.14, 0.60, darkMat, 0.23, 1.44, baseC);      // vifte-hette
+// Koketopp under viften
+box(0.52, 0.03, 0.52, darkMat, 0.33, 0.925, baseC);     // koketopp
+// Kjøkkenvask
+box(0.42, 0.03, 0.46, steelMat, 0.33, 0.925, baseZ0+0.7); // vask
+// Innbygd stekeovn i sørtårnet
+box(0.03, 0.60, 0.60, darkMat, 0.635, 1.30, RD2-TALL/2);  // ovnsfront
+box(0.03, 0.06, 0.62, steelMat, 0.64, 1.63, RD2-TALL/2);  // stålkant over ovn
+// Slanke stålhåndtak på høyskapene
+box(0.02, 1.4, 0.03, steelMat, 0.635, 1.10, 0.35);      // håndtak kjøl
+box(0.02, 1.4, 0.03, steelMat, 0.635, 1.10, 0.65);      // håndtak frys
+box(0.02, 0.9, 0.03, steelMat, 0.635, 0.55, baseZ1+0.1);// håndtak ovnstårn
+// LED-glød under overskap på hvit flis
+const kLED = new THREE.MeshBasicMaterial({color:0xfff4e0});
+box(0.02, 0.02, baseL-0.2, kLED, 0.35, 1.44, baseC);
+const kLight1 = new THREE.PointLight(0xfff2dc, 0.22, 1.6); kLight1.position.set(0.35, 1.35, baseZ0+0.7); scene.add(kLight1);
+const kLight2 = new THREE.PointLight(0xfff2dc, 0.22, 1.6); kLight2.position.set(0.35, 1.35, baseZ1-0.7); scene.add(kLight2);
+
+/* ---------- Spilevegg-romdeler (den røde streken) ---------- */
+// Åpen konstruksjon: spiler i tre-ramme (topp, bunn og sider), ingen bakplate —
+// du ser gjennom mellomrommene. Bredde og mellomrom styres med sliderne.
+const divider = new THREE.Group();
+const FR_W = 0.045;             // rammens synlige bredde
+const FR_D = 0.070;             // rammens dybde (spileveggens tykkelse)
+let slatW = 0.045;              // spilebredde (slider)
+let slatGap = 0.025;            // mellomrom (slider)
+
+function buildDivider(){
+  divider.clear();
+  // Ramme — samme materiale som spilene, følger treslag-knappen
+  box(FR_D, RH, FR_W, slatMat, 0, RH/2, -DIV_LEN/2 + FR_W/2, divider); // ende mot rommet
+  box(FR_D, RH, FR_W, slatMat, 0, RH/2,  DIV_LEN/2 - FR_W/2, divider); // ende mot veggen
+  const innerLen = DIV_LEN - 2*FR_W;
+  box(FR_D, FR_W, innerLen, slatMat, 0, FR_W/2, 0, divider);           // bunn
+  box(FR_D, FR_W, innerLen, slatMat, 0, RH - FR_W/2, 0, divider);      // topp
+  // Spiler — antall regnes ut så de fyller rammen jevnt
+  const n = Math.max(1, Math.floor((innerLen + slatGap) / (slatW + slatGap)));
+  const span = n*slatW + (n-1)*slatGap;
+  const start = -span/2 + slatW/2;
+  const h = RH - 2*FR_W;
+  const geo = new THREE.BoxGeometry(0.045, h, slatW);
+  for(let i=0;i<n;i++){
+    const s = new THREE.Mesh(geo, slatMat);
+    s.position.set(0, RH/2, start + i*(slatW+slatGap));
+    s.castShadow = s.receiveShadow = true;
+    divider.add(s);
+  }
+  // Oppdater tallene i panelet nede til venstre
+  document.getElementById('specN').textContent = n + ' stk · ' + Math.round(slatW*1000) + ' mm';
+  document.getElementById('specGap').textContent = Math.round(slatGap*1000) + ' mm';
+}
+divider.position.set(DIV_X, 0, RD - DIV_LEN/2);  // fra sørveggen og 2 m inn
+scene.add(divider);
+buildDivider();
+
+/* ---------- Hylle-romdeler (alternativ til spileveggen) ---------- */
+// Åpen hylle-/reol-romdeler i samme fotavtrykk. To fasonger:
+//   0 = hvit, minimalistisk med forskjøvne hyller (bilde 1)
+//   1 = tre-grid med metallramme (bilde 2/3)
+const hylle = new THREE.Group();
+hylle.position.set(DIV_X, 0, RD - DIV_LEN/2);
+scene.add(hylle);
+let hylleFasong = 0;
+function buildHylle(){
+  hylle.clear();
+  const zN = -DIV_LEN/2, zS = DIV_LEN/2;
+  const white = (hylleFasong === 0);
+  const frM = white ? whiteMat : gridMat;   // ramme/stolper
+  const shM = white ? whiteMat : slatMat;   // hylleplater
+  const caM = white ? whiteMat : slatMat;   // bunnskap
+  const DEP = 0.30, POST = 0.05;
+  // Bunnskap (sideboard) med dører
+  const cy0 = 0.14, cyT = 0.68, ch = cyT - cy0;
+  box(0.44, ch, 1.9, caM, 0, cy0+ch/2, 0, hylle);
+  for(let i=1;i<4;i++)
+    box(0.006, ch-0.06, 0.005, darkMat, 0.223, cy0+ch/2, -0.95+i*0.475, hylle); // dørspor
+  if(white) for(const pz of [zN+0.18, zS-0.18])
+    box(0.03, cy0, 0.03, frM, 0.19, cy0/2, pz, hylle);                          // tynne ben
+  // TV-panel i tre (bak TV-en)
+  box(0.06, 0.95, 1.56, slatMat, 0, 1.15, 0, hylle);
+  // Vertikale stolper gulv→tak (fremre + bakre)
+  const posts = white ? [zN+0.05, 0.0, zS-0.05]
+                      : [zN+0.03, zN+0.68, 0.0, zS-0.68, zS-0.03];
+  for(const pz of posts){
+    box(POST, RH, POST, frM,  DEP/2, RH/2, pz, hylle);
+    box(POST, RH, POST, frM, -DEP/2, RH/2, pz, hylle);
+    if(!white) box(DEP, POST, POST, frM, 0, RH-0.42, pz, hylle);               // tverrbånd
+  }
+  // Hyller
+  if(white){
+    const list = [[2.02,zN,0.30],[1.66,zN,-0.10],[1.98,0.10,zS],[1.60,0.30,zS]]; // forskjøvne
+    for(const [sy,za,zb] of list)
+      box(DEP+0.02, 0.035, zb-za, shM, 0, sy, (za+zb)/2, hylle);
+  } else {
+    for(const sy of [1.02,1.42,1.86,2.18])                                       // jevnt grid
+      box(DEP, 0.035, 2.0, shM, 0, sy, 0, hylle);
+  }
+  box(DEP+0.02, 0.04, 2.0, shM, 0, RH-0.05, 0, hylle);                           // topphylle
+}
+buildHylle();
+hylle.visible = false;
+let dividerType = 'spile';           // 'spile' eller 'hylle'
+
+/* ---------- TV på spileveggen (Samsung S90F 65") ---------- */
+const TV_W=1.4443, TV_H=0.8309, TV_D=0.0399;
+const tvGroup = new THREE.Group();
+const tvBody = box(TV_W, TV_H, TV_D, tvBodyMat, 0, 0, 0, tvGroup);
+const screen = new THREE.Mesh(new THREE.PlaneGeometry(TV_W-0.012, TV_H-0.012), tvScreenOff);
+screen.position.z = TV_D/2 + 0.001;
+tvGroup.add(screen);
+tvGroup.rotation.y = Math.PI/2;                  // skjermen vender mot stuedelen (øst)
+tvGroup.position.set(DIV_X + FR_D/2 + 0.02 + TV_D/2, 1.10, RD - DIV_LEN/2);
+scene.add(tvGroup);
+
+/* ---------- TV-benk under TV-en (av / hengende / gulvstående) ---------- */
+const tvBench = new THREE.Group();
+tvBench.position.set(DIV_X, 0, RD - DIV_LEN/2);
+scene.add(tvBench);
+let benchMode = 1;                               // 0=av, 1=hengende, 2=gulv
+const BENCH_LEN = 1.8, BENCH_D = 0.40;
+function buildTVBench(){
+  tvBench.clear();
+  tvBench.visible = benchMode !== 0;
+  if(benchMode === 0) return;
+  const cx = FR_D/2 + BENCH_D/2 + 0.01;          // benk-senter litt ut fra østsiden
+  if(benchMode === 1){
+    const h = 0.30, yc = 0.55;                   // hengende: svever ~0,40 m over gulv
+    box(BENCH_D, h, BENCH_LEN, slatMat, cx, yc, 0, tvBench);
+    box(BENCH_D+0.02, 0.02, BENCH_LEN+0.02, darkMat, cx, yc+h/2+0.01, 0, tvBench); // topplate
+  } else {
+    const h = 0.42, yc = 0.06 + h/2;             // gulvstående med sokkelføtter
+    box(BENCH_D, h, BENCH_LEN, slatMat, cx, yc, 0, tvBench);
+    box(BENCH_D+0.02, 0.02, BENCH_LEN+0.02, darkMat, cx, yc+h/2+0.01, 0, tvBench); // topplate
+    for(const sz of [-BENCH_LEN/2+0.12, BENCH_LEN/2-0.12]){
+      box(BENCH_D-0.06, 0.06, 0.08, darkMat, cx, 0.03, sz, tvBench);               // føtter
+    }
+  }
+}
+buildTVBench();
+
+/* ---------- Flytende hyller på vestsiden (mot kjøkken), sporadisk plassert ---------- */
+const shelves = new THREE.Group();
+shelves.position.set(DIV_X, 0, RD - DIV_LEN/2);
+scene.add(shelves);
+const SHELF_D = 0.22, SHELF_T = 0.045;
+// [lokal z langs spileveggen, høyde y, lengde] — bevisst ujevn plassering
+const SHELF_LIST = [
+  [-0.62, 0.78, 0.55],
+  [ 0.28, 1.16, 0.66],
+  [-0.14, 1.52, 0.50],
+  [ 0.58, 0.96, 0.60],
+  [-0.80, 1.86, 0.46],
+];
+let shelvesOn = false;
+function buildShelves(){
+  shelves.clear();
+  shelves.visible = shelvesOn;
+  const cx = -FR_D/2 - SHELF_D/2 - 0.01;         // hyller stikker ut mot kjøkkenet (−x)
+  for(const [sz, sy, len] of SHELF_LIST){
+    box(SHELF_D, SHELF_T, len, slatMat, cx, sy, sz, shelves);
+    box(0.03, 0.12, 0.03, darkMat, cx+SHELF_D/2-0.03, sy-0.08, sz-len/2+0.05, shelves); // liten brakett
+    box(0.03, 0.12, 0.03, darkMat, cx+SHELF_D/2-0.03, sy-0.08, sz+len/2-0.05, shelves);
+  }
+}
+buildShelves();
+
+/* ---------- Møbler i stuedelen ---------- */
+const furniture = new THREE.Group();
+scene.add(furniture);
+
+// Teppe
+const rug = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 1.8), rugMat);
+rug.rotation.x = -Math.PI/2;
+rug.position.set(5.0, 0.005, 3.4);
+rug.receiveShadow = true;
+furniture.add(rug);
+
+// Sweef Gorilla mot østveggen, vendt mot TV-en — dyp, lav og myk modulsofa
+// Lav base/plattform
+box(1.15, 0.16, 2.25, sofaMat, 5.875, 0.08, 3.325, furniture);        // base
+// Lavt ryggstøtte-panel mot veggen
+box(0.22, 0.50, 2.25, sofaMat, 6.34, 0.41, 3.325, furniture);         // ryggpanel
+// Tunge, lave armlener i hver ende
+box(1.15, 0.42, 0.26, sofaMat, 5.875, 0.37, 2.33, furniture);         // armlene sør
+box(1.15, 0.42, 0.26, sofaMat, 5.875, 0.37, 4.32, furniture);         // armlene nord
+// To store, chunky seteputer
+box(0.80, 0.22, 0.82, sofaMat, 5.80, 0.27, 2.89, furniture);
+box(0.80, 0.22, 0.82, sofaMat, 5.80, 0.27, 3.76, furniture);
+// To store, myke ryggputer
+box(0.26, 0.50, 0.82, sofaMat, 6.19, 0.63, 2.89, furniture);
+box(0.26, 0.50, 0.82, sofaMat, 6.19, 0.63, 3.76, furniture);
+
+// Stuebord
+box(0.7, 0.05, 1.1, darkMat, 4.9, 0.35, 3.35, furniture);
+box(0.05, 0.33, 0.05, darkMat, 4.6, 0.165, 2.95, furniture);
+box(0.05, 0.33, 0.05, darkMat, 5.2, 0.165, 2.95, furniture);
+box(0.05, 0.33, 0.05, darkMat, 4.6, 0.165, 3.75, furniture);
+box(0.05, 0.33, 0.05, darkMat, 5.2, 0.165, 3.75, furniture);
+
+// Spisebord i nordenden
+const tableTop = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.55, 0.04, 32),
+  new THREE.MeshStandardMaterial({color:0x9a7850, roughness:0.6}));
+tableTop.position.set(4.6, 0.74, 1.1);
+tableTop.castShadow = true;
+furniture.add(tableTop);
+const tableLeg = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.14, 0.72, 16), darkMat);
+tableLeg.position.set(4.6, 0.36, 1.1);
+furniture.add(tableLeg);
+for(const [cx,cz] of [[3.95,1.1],[5.25,1.1],[4.6,0.5],[4.6,1.7]]){
+  const seat = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.18, 0.05, 16),
+    new THREE.MeshStandardMaterial({color:0x3a332c, roughness:0.8}));
+  seat.position.set(cx, 0.45, cz);
+  seat.castShadow = true;
+  furniture.add(seat);
+  const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.05, 0.43, 12), darkMat);
+  leg.position.set(cx, 0.215, cz);
+  furniture.add(leg);
+}
+
+/* ---------- Lys ---------- */
+const ambient = new THREE.AmbientLight(0xfff2e0, 0.4);
+scene.add(ambient);
+
+// Dagslys inn gjennom balkongglasset
+const sun = new THREE.DirectionalLight(0xfff0dd, 0.9);
+sun.position.set(3.5, 5.5, -5);
+sun.target.position.set(3.2, 0, 3);
+sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+sun.shadow.camera.left=-5; sun.shadow.camera.right=5;
+sun.shadow.camera.top=5; sun.shadow.camera.bottom=-3;
+scene.add(sun, sun.target);
+
+// Taklamper
+const lamp1 = new THREE.PointLight(0xffe4c0, 0.45, 7);
+lamp1.position.set(4.8, 2.25, 3.2);
+scene.add(lamp1);
+const lamp2 = new THREE.PointLight(0xffe4c0, 0.4, 7);
+lamp2.position.set(1.6, 2.25, 2.0);
+scene.add(lamp2);
+
+// Varm glød ved spileveggen
+const glow = new THREE.PointLight(0xc98f4e, 0.4, 3);
+glow.position.set(DIV_X + 0.6, 0.25, RD - 1.0);
+scene.add(glow);
+
+/* ---------- Stemninger: lys ute (sol/vindu/himmel) + inne (lamper) ---------- */
+const VIBES = [
+  { name:'Dag',        bg:0x141210,
+    sun:{c:0xfff0dd,i:1.05}, win:{c:0xdceaf2,i:0.35}, sky:0xdcefff,
+    amb:{c:0xfff4e6,i:0.5},  lamp:{c:0xffe4c0,i:0.18}, glow:0.15 },
+  { name:'Solnedgang', bg:0x2a1a10,
+    sun:{c:0xff9642,i:1.15}, win:{c:0xffb072,i:0.5},  sky:0xffb478,
+    amb:{c:0xffd6ab,i:0.42}, lamp:{c:0xffcf9a,i:0.5},  glow:0.55 },
+  { name:'Kveld',      bg:0x080a11,
+    sun:{c:0x39496a,i:0.28}, win:{c:0x4a6a9a,i:0.28}, sky:0x18233c,
+    amb:{c:0x28324c,i:0.3},  lamp:{c:0xffd9a0,i:0.9},  glow:0.75 },
+  { name:'Overskyet',  bg:0x181a1c,
+    sun:{c:0xcfd6dc,i:0.6},  win:{c:0xc8d2da,i:0.35}, sky:0xd4dade,
+    amb:{c:0xdde3e8,i:0.52}, lamp:{c:0xffe8c8,i:0.42}, glow:0.3 },
+];
+
+function applyVibe(v){
+  scene.background.setHex(v.bg);
+  sun.color.setHex(v.sun.c);   sun.intensity   = v.sun.i;
+  winLight.color.setHex(v.win.c); winLight.intensity = v.win.i;
+  winSky.material.color.setHex(v.sky);
+  eastWin.material.color.setHex(v.sky);
+  eastWin2.material.color.setHex(v.sky);
+  ambient.color.setHex(v.amb.c); ambient.intensity = v.amb.i;
+  lamp1.color.setHex(v.lamp.c);  lamp1.intensity = v.lamp.i;
+  lamp2.color.setHex(v.lamp.c);  lamp2.intensity = v.lamp.i;
+  glow.intensity = v.glow;
+}
+
+const vibeBtns = document.querySelectorAll('#vibeBox .vbtns button');
+function setVibe(i){
+  applyVibe(VIBES[i]);
+  vibeBtns.forEach((b,j)=>b.classList.toggle('active', j===i));
+}
+vibeBtns.forEach(b=>b.onclick = ()=>setVibe(parseInt(b.dataset.vibe)));
+setVibe(0);   // start i Dag-modus
+
+/* ---------- Kamerakontroll (rotér + flytt + zoom) ---------- */
+const target = new THREE.Vector3(4.2, 1.15, 3.4);
+let theta = 2.0, phi = 1.42, dist = 3.0;
+const DIST_MIN=0.6, DIST_MAX=14, PHI_MIN=0.25, PHI_MAX=1.56;
+
+function updateCamera(){
+  phi = Math.max(PHI_MIN, Math.min(PHI_MAX, phi));
+  dist = Math.max(DIST_MIN, Math.min(DIST_MAX, dist));
+  camera.position.set(
+    target.x + dist*Math.sin(phi)*Math.sin(theta),
+    target.y + dist*Math.cos(phi),
+    target.z + dist*Math.sin(phi)*Math.cos(theta));
+  camera.lookAt(target);
+}
+
+let mode=null, px=0, py=0, pinchDist=0, pmx=0, pmy=0;
+
+function pan(dx, dy){
+  const right = new THREE.Vector3().setFromMatrixColumn(camera.matrix, 0);
+  const up    = new THREE.Vector3().setFromMatrixColumn(camera.matrix, 1);
+  const k = dist * 0.0011;
+  target.addScaledVector(right, -dx*k);
+  target.addScaledVector(up, dy*k);
+  clampTarget();
+  updateCamera();
+}
+function clampTarget(){
+  target.x = Math.max(-1, Math.min(RW+1, target.x));
+  target.y = Math.max(0.15, Math.min(RH+0.6, target.y));
+  target.z = Math.max(-2.5, Math.min(RD2+1, target.z));
+}
+
+canvas.addEventListener('contextmenu', e=>e.preventDefault());
+canvas.addEventListener('pointerdown', e=>{
+  mode = (e.button===2 || e.shiftKey) ? 'pan' : 'rotate';
+  px=e.clientX; py=e.clientY;
+  canvas.setPointerCapture(e.pointerId);
+});
+canvas.addEventListener('pointermove', e=>{
+  if(!mode) return;
+  const dx=e.clientX-px, dy=e.clientY-py;
+  px=e.clientX; py=e.clientY;
+  if(mode==='pan'){ pan(dx, dy); }
+  else { theta -= dx*0.006; phi -= dy*0.005; updateCamera(); }
+});
+canvas.addEventListener('pointerup', ()=>mode=null);
+canvas.addEventListener('wheel', e=>{
+  e.preventDefault();
+  dist *= (1 + Math.sign(e.deltaY)*0.09);
+  updateCamera();
+},{passive:false});
+
+canvas.addEventListener('touchstart', e=>{
+  if(e.touches.length===2){
+    mode=null;
+    const [a,b] = e.touches;
+    pinchDist = Math.hypot(a.clientX-b.clientX, a.clientY-b.clientY);
+    pmx = (a.clientX+b.clientX)/2;
+    pmy = (a.clientY+b.clientY)/2;
+  }
+},{passive:true});
+canvas.addEventListener('touchmove', e=>{
+  if(e.touches.length===2){
+    const [a,b] = e.touches;
+    const d  = Math.hypot(a.clientX-b.clientX, a.clientY-b.clientY);
+    const mx = (a.clientX+b.clientX)/2;
+    const my = (a.clientY+b.clientY)/2;
+    dist *= pinchDist/d;
+    pinchDist = d;
+    pan(mx-pmx, my-pmy);
+    pmx=mx; pmy=my;
+    updateCamera();
+  }
+},{passive:true});
+
+const keys = new Set();
+addEventListener('keydown', e=>keys.add(e.key.toLowerCase()));
+addEventListener('keyup',   e=>keys.delete(e.key.toLowerCase()));
+addEventListener('blur',    ()=>keys.clear());
+
+function keyMove(){
+  if(!keys.size) return;
+  const sp = 0.028 * Math.max(dist/3, 0.5);
+  const f = new THREE.Vector3(-Math.sin(theta), 0, -Math.cos(theta));
+  const r = new THREE.Vector3(-f.z, 0, f.x);
+  if(keys.has('w')||keys.has('arrowup'))    target.addScaledVector(f,  sp);
+  if(keys.has('s')||keys.has('arrowdown'))  target.addScaledVector(f, -sp);
+  if(keys.has('a')||keys.has('arrowleft'))  target.addScaledVector(r, -sp);
+  if(keys.has('d')||keys.has('arrowright')) target.addScaledVector(r,  sp);
+  if(keys.has('e'))                         target.y += sp;
+  if(keys.has('q'))                         target.y -= sp;
+  clampTarget();
+  updateCamera();
+}
+
+/* ---------- Knapper ---------- */
+const btnTV = document.getElementById('btnTV');
+const btnWood = document.getElementById('btnWood');
+const btnFurn = document.getElementById('btnFurn');
+const btnBench = document.getElementById('btnBench');
+const btnShelves = document.getElementById('btnShelves');
+const btnViewSofa = document.getElementById('btnViewSofa');
+const btnViewKitchen = document.getElementById('btnViewKitchen');
+const btnReset = document.getElementById('btnReset');
+
+/* Slider: flytt spileveggen mot/fra sofaen (TV-en følger med) */
+const divSlider = document.getElementById('divSlider');
+const divVal = document.getElementById('divVal');
+const SOFA_FRONT = 5.38;                 // forkant av sofasetet
+function setDividerX(v){
+  divider.position.x = v;
+  hylle.position.x = v;
+  tvGroup.position.x = v + FR_D/2 + 0.02 + TV_D/2;
+  tvBench.position.x = v;
+  shelves.position.x = v;
+  const toSofa = Math.max(0, SOFA_FRONT - (v + FR_D/2 + 0.02 + TV_D));
+  divVal.textContent =
+    v.toFixed(2).replace('.',',') + ' m fra kjøkken · ' +
+    toSofa.toFixed(2).replace('.',',') + ' m TV→sofa';
+}
+divSlider.addEventListener('input', ()=>setDividerX(parseFloat(divSlider.value)));
+setDividerX(parseFloat(divSlider.value));
+
+/* Slidere: spilebredde og mellomrom — bygger spileveggen på nytt */
+const slatSlider = document.getElementById('slatSlider');
+const gapSlider = document.getElementById('gapSlider');
+const slatVal = document.getElementById('slatVal');
+const gapVal = document.getElementById('gapVal');
+function updateSlats(){
+  slatW = parseInt(slatSlider.value)/1000;
+  slatGap = parseInt(gapSlider.value)/1000;
+  slatVal.textContent = slatSlider.value + ' mm';
+  gapVal.textContent = gapSlider.value + ' mm';
+  buildDivider();
+}
+slatSlider.addEventListener('input', updateSlats);
+gapSlider.addEventListener('input', updateSlats);
+
+/* Romdeler-type: spilevegg vs. hylle, + hylle-fasong */
+const fasongBox = document.getElementById('fasongBox');
+const slatControls = document.getElementById('slatControls');
+const spileButtons = document.getElementById('spileButtons');
+function applyDividerType(){
+  const spile = (dividerType === 'spile');
+  divider.visible = spile;
+  hylle.visible   = !spile;
+  tvBench.visible = spile && benchMode !== 0;   // hylla har eget skap
+  shelves.visible = spile && shelvesOn;
+  slatControls.style.display = spile ? '' : 'none';
+  spileButtons.style.display = spile ? '' : 'none';
+  fasongBox.style.display    = spile ? 'none' : '';
+}
+const typeBtns = document.querySelectorAll('#typeBox .vbtns button');
+function setType(t){
+  dividerType = t;
+  applyDividerType();
+  typeBtns.forEach(b=>b.classList.toggle('active', b.dataset.type===t));
+}
+typeBtns.forEach(b=>b.onclick = ()=>setType(b.dataset.type));
+const fasongBtns = document.querySelectorAll('#fasongBox .vbtns button');
+function setFasong(i){
+  hylleFasong = i;
+  buildHylle();
+  fasongBtns.forEach(b=>b.classList.toggle('active', parseInt(b.dataset.fasong)===i));
+}
+fasongBtns.forEach(b=>b.onclick = ()=>setFasong(parseInt(b.dataset.fasong)));
+applyDividerType();
+
+/* Fargevelgere: vegg+tak (samme farge), kjøkken og fliser */
+const wallColor = document.getElementById('wallColor');
+const kitchenColor = document.getElementById('kitchenColor');
+const backsplashColor = document.getElementById('backsplashColor');
+wallColor.addEventListener('input', ()=>{
+  wallMat.color.set(wallColor.value);
+  ceilMat.color.set(wallColor.value);   // tak følger veggfargen
+});
+kitchenColor.addEventListener('input', ()=>counterMat.color.set(kitchenColor.value));
+backsplashColor.addEventListener('input', ()=>backsplashMat.color.set(backsplashColor.value));
+// Sett tak lik vegg fra start
+wallMat.color.set(wallColor.value);
+ceilMat.color.set(wallColor.value);
+
+btnTV.onclick = ()=>{
+  tvGroup.visible = !tvGroup.visible;
+  btnTV.innerHTML = '<b>TV</b> · ' + (tvGroup.visible?'på':'av');
+  btnTV.classList.toggle('off', !tvGroup.visible);
+};
+btnWood.onclick = ()=>{
+  woodIndex = (woodIndex+1) % WOODS.length;
+  slatMat.color.setHex(WOODS[woodIndex].color);
+  slatMat.roughness = WOODS[woodIndex].rough;
+  btnWood.innerHTML = '<b>Treslag</b> · ' + WOODS[woodIndex].name;
+};
+btnFurn.onclick = ()=>{
+  furniture.visible = !furniture.visible;
+  btnFurn.innerHTML = '<b>Møbler</b> · ' + (furniture.visible?'på':'av');
+  btnFurn.classList.toggle('off', !furniture.visible);
+};
+const BENCH_NAMES = ['av','hengende','gulv'];
+btnBench.onclick = ()=>{
+  benchMode = (benchMode+1) % 3;
+  buildTVBench();
+  btnBench.innerHTML = '<b>TV-benk</b> · ' + BENCH_NAMES[benchMode];
+  btnBench.classList.toggle('off', benchMode===0);
+};
+btnShelves.onclick = ()=>{
+  shelvesOn = !shelvesOn;
+  shelves.visible = shelvesOn;
+  btnShelves.innerHTML = '<b>Hyller</b> · ' + (shelvesOn?'på':'av');
+  btnShelves.classList.toggle('off', !shelvesOn);
+};
+/* Kameravinkler i hjørnene — plasser kamera i et hjørne, se mot rommet */
+function lookFrom(cx,cy,cz, tx,ty,tz){
+  target.set(tx,ty,tz);
+  const ox=cx-tx, oy=cy-ty, oz=cz-tz;
+  dist  = Math.hypot(ox,oy,oz);
+  phi   = Math.acos(oy/dist);
+  theta = Math.atan2(ox, oz);
+  updateCamera();
+}
+// Hjørne: sofavegg (øst) + glassvegg (nord) — ser diagonalt mot TV-en
+function viewSofaCorner(){    lookFrom(6.15, 0.62, 0.55,  3.4, 1.15, 3.3); }
+// Hjørne: glassvegg (nord) + kjøkken (vest) — ser innover i rommet
+function viewKitchenCorner(){ lookFrom(0.60, 0.62, 0.60,  3.7, 1.15, 3.4); }
+btnViewSofa.onclick    = viewSofaCorner;
+btnViewKitchen.onclick = viewKitchenCorner;
+
+/* Nullstill alt til utgangspunktet */
+function resetAll(){
+  // Farger
+  wallColor.value='#d9d2c6'; kitchenColor.value='#2c2c2e'; backsplashColor.value='#f4f4f2';
+  wallMat.color.set(wallColor.value);
+  ceilMat.color.set(wallColor.value);
+  counterMat.color.set(kitchenColor.value);
+  backsplashMat.color.set(backsplashColor.value);
+  // Stemning → Dag
+  setVibe(0);
+  // Spilevegg-slidere
+  divSlider.value=3.2; setDividerX(3.2);
+  slatSlider.value=45; gapSlider.value=25; updateSlats();
+  // Treslag → eik
+  woodIndex=0;
+  slatMat.color.setHex(WOODS[0].color); slatMat.roughness=WOODS[0].rough;
+  btnWood.innerHTML='<b>Treslag</b> · '+WOODS[0].name;
+  // TV på
+  tvGroup.visible=true; btnTV.innerHTML='<b>TV</b> · på'; btnTV.classList.remove('off');
+  screen.material=tvScreenOff;
+  // Møbler på
+  furniture.visible=true; btnFurn.innerHTML='<b>Møbler</b> · på'; btnFurn.classList.remove('off');
+  // TV-benk → hengende, hyller → på
+  benchMode=1; buildTVBench();
+  btnBench.innerHTML='<b>TV-benk</b> · hengende'; btnBench.classList.remove('off');
+  shelvesOn=false; shelves.visible=false;
+  btnShelves.innerHTML='<b>Hyller</b> · av'; btnShelves.classList.add('off');
+  // Romdeler → spilevegg, fasong → hvit
+  setFasong(0); setType('spile');
+  // Kamera til sofahjørnet
+  viewSofaCorner();
+}
+btnReset.onclick = resetAll;
+
+/* Skjul/vis hele valgpanelet — egen merkelapp for telefon */
+const btnToggleUI = document.getElementById('btnToggleUI');
+const ctrlBody = document.getElementById('ctrlBody');
+const isPhone = ()=>window.matchMedia('(max-width:640px)').matches;
+function updateToggleLabel(){
+  const hidden = ctrlBody.classList.contains('hidden');
+  btnToggleUI.textContent = isPhone()
+    ? (hidden ? '☰  Valg' : '✕  Lukk')
+    : (hidden ? 'Vis valg ▸' : 'Skjul valg ▾');
+}
+btnToggleUI.onclick = ()=>{
+  ctrlBody.classList.toggle('hidden');
+  updateToggleLabel();
+};
+// Start lukket på telefon
+if(isPhone()) ctrlBody.classList.add('hidden');
+updateToggleLabel();
+addEventListener('resize', updateToggleLabel);
+
+// Start i sofahjørnet
+viewSofaCorner();
+
+/* ---------- Render ---------- */
+function resize(){
+  const w=innerWidth, h=innerHeight;
+  renderer.setSize(w,h,false);
+  camera.aspect = w/h;
+  // Menneskelig synsopplevelse: ca. 100° horisontalt synsfelt.
+  // Vertikal FOV regnes ut fra skjermformatet så det blir likt på PC og mobil.
+  const hFov = 120 * Math.PI/180;
+  camera.fov = Math.min(105, 2*Math.atan(Math.tan(hFov/2)/camera.aspect) * 180/Math.PI);
+  camera.updateProjectionMatrix();
+}
+addEventListener('resize', resize);
+resize();
+updateCamera();
+
+setTimeout(()=>{ const h=document.getElementById('hint'); if(h) h.style.opacity=0; }, 5000);
+
+(function loop(){
+  requestAnimationFrame(loop);
+  keyMove();
+  renderer.render(scene, camera);
+})();
+</script>
+</body>
+</html>
