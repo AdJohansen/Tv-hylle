@@ -785,7 +785,19 @@ canvas.addEventListener('touchmove', e=>{
     const d  = Math.hypot(a.clientX-b.clientX, a.clientY-b.clientY);
     const mx = (a.clientX+b.clientX)/2;
     const my = (a.clientY+b.clientY)/2;
-    dist *= pinchDist/d;
+    // Zoom mot punktet under fingrene: flytt orbit-punktet mot det du
+    // kniper på, proporsjonalt med zoom-endringen (dolly-to-point).
+    const newDist = Math.max(DIST_MIN, Math.min(DIST_MAX, dist * pinchDist/d));
+    const f = newDist / dist;
+    if(f !== 1){
+      const nx = (mx/innerWidth)*2 - 1, ny = -(my/innerHeight)*2 + 1;
+      const p = new THREE.Vector3(nx, ny, 0.5).unproject(camera)
+        .sub(camera.position).normalize().multiplyScalar(dist)
+        .add(camera.position);                 // punktet under fingrene, på target-dybde
+      target.lerp(p, 1 - f);                   // inn mot punktet / ut fra punktet
+      dist = newDist;
+      clampTarget();
+    }
     pinchDist = d;
     pan(mx-pmx, my-pmy);
     pmx=mx; pmy=my;
