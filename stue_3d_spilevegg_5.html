@@ -103,7 +103,7 @@
   <div class="row"><span>Kjøkkenside</span><span>5,04 m</span></div>
   <div class="row"><span>Sofavegg</span><span>4,49 m</span></div>
   <div class="row"><span>Bredde</span><span>6,51 m</span></div>
-  <div class="row"><span>Spilevegg</span><span><b>romdeler 2,0 m</b></span></div>
+  <div class="row"><span>Spilevegg</span><span><b id="specLen">romdeler 2,0 m</b></span></div>
   <div class="row"><span>Spiler</span><span id="specN">29 stk · 45 mm</span></div>
   <div class="row"><span>Mellomrom</span><span id="specGap">25 mm</span></div>
   <div class="row"><span>TV-senter</span><span>1100 mm</span></div>
@@ -129,6 +129,8 @@
   <div id="sliderBox">
     <label><b>Plassering</b><br><span id="divVal"></span></label>
     <input type="range" id="divSlider" min="3.15" max="3.7" step="0.02" value="3.15">
+    <label class="mt"><b>Lengde</b> · <span id="lenVal">2,00 m</span></label>
+    <input type="range" id="lenSlider" min="1.6" max="3.0" step="0.05" value="2.0">
     <div id="slatControls">
       <label class="mt"><b>Spilebredde</b> · <span id="slatVal">45 mm</span></label>
       <input type="range" id="slatSlider" min="20" max="95" step="1" value="45">
@@ -199,7 +201,7 @@ const RD2 = 5.04;                         // dybde på vestsiden (kjøkkensiden)
 const XSTEP = 3.2;                        // der sørveggen trapper (hjørnet ved gangen)
 const RH = 2.40;                          // takhøyde
 const DIV_X = 3.2;                        // spilevegg-posisjon (rød strek)
-const DIV_LEN = 2.0;                      // 2 m ut fra sørveggen
+let DIV_LEN = 2.0;                        // lengde ut fra sørveggen (slider)
 const SLAT_W = 0.045, SLAT_D = 0.028, N = 29;
 const GAP = (DIV_LEN - N*SLAT_W)/(N-1);   // 24,8 mm
 
@@ -392,13 +394,13 @@ box(RW, 0.04, 0.06, frameMat, RW/2, 1.0, -2.3);
 
 /* ---------- Kjøkken langs vestveggen — flush fra vegg til vegg (z=0..5,04) ---------- */
 const KT = 2.25;                                        // høyde høyskap/overskap (gap til tak)
-const TALL = 1.0;                                       // bredde på hvert høyskap
+const TALL = 0.7;                                       // bredde på hvert høyskap (smalere = mer benk)
 const baseZ0 = TALL, baseZ1 = RD2 - TALL;               // underskap-sonen mellom høyskapene
-const baseC = (baseZ0+baseZ1)/2, baseL = baseZ1-baseZ0; // senter 2,52 · lengde 3,04
+const baseC = (baseZ0+baseZ1)/2, baseL = baseZ1-baseZ0; // senter 2,52 · lengde 3,64
 const hoodZ0 = baseC-0.25, hoodZ1 = baseC+0.25;         // viftesonen midt på
-// Høyskap flush i begge ender: kjøl/frys (nord) og stekeovnstårn (sør)
-box(0.62, KT, TALL, counterMat, 0.31, KT/2, TALL/2);            // høyskap kjøl/frys (nord, mot z=0)
-box(0.62, KT, TALL, counterMat, 0.31, KT/2, RD2-TALL/2);       // høyskap stekeovn (sør, mot z=5,04)
+// Høyskap flush i begge ender: stekeovnstårn (nord) og kjøl/frys (sør)
+box(0.62, KT, TALL, counterMat, 0.31, KT/2, TALL/2);            // høyskap stekeovn (nord, mot z=0)
+box(0.62, KT, TALL, counterMat, 0.31, KT/2, RD2-TALL/2);       // høyskap kjøl/frys (sør, mot z=5,04)
 // Fyllplate over kjøkkenet — samme farge, helt opp til taket
 box(0.62, RH-KT, RD2, counterMat, 0.01, (KT+RH)/2, RD2/2);     // topplate til tak
 // Underskap mellom høyskapene
@@ -418,12 +420,12 @@ box(0.52, 0.03, 0.52, darkMat, 0.33, 0.925, baseC);     // koketopp
 // Kjøkkenvask
 box(0.42, 0.03, 0.46, steelMat, 0.33, 0.925, baseZ0+0.7); // vask
 // Innbygd stekeovn i sørtårnet
-box(0.03, 0.60, 0.60, darkMat, 0.635, 1.30, RD2-TALL/2);  // ovnsfront
-box(0.03, 0.06, 0.62, steelMat, 0.64, 1.63, RD2-TALL/2);  // stålkant over ovn
+box(0.03, 0.60, 0.55, darkMat, 0.635, 1.30, TALL/2);      // ovnsfront (nordtårnet)
+box(0.03, 0.06, 0.58, steelMat, 0.64, 1.63, TALL/2);      // stålkant over ovn
 // Slanke stålhåndtak på høyskapene
-box(0.02, 1.4, 0.03, steelMat, 0.635, 1.10, 0.35);      // håndtak kjøl
-box(0.02, 1.4, 0.03, steelMat, 0.635, 1.10, 0.65);      // håndtak frys
-box(0.02, 0.9, 0.03, steelMat, 0.635, 0.55, baseZ1+0.1);// håndtak ovnstårn
+box(0.02, 1.4, 0.03, steelMat, 0.635, 1.10, RD2-TALL/2-0.12); // håndtak kjøl (sørtårnet)
+box(0.02, 1.4, 0.03, steelMat, 0.635, 1.10, RD2-TALL/2+0.12); // håndtak frys
+box(0.02, 0.9, 0.03, steelMat, 0.635, 0.55, baseZ0-0.1);      // håndtak ovnstårn
 // LED-glød under overskap på hvit flis
 const kLED = new THREE.MeshBasicMaterial({color:0xfff4e0});
 box(0.02, 0.02, baseL-0.2, kLED, 0.35, 1.44, baseC);
@@ -483,33 +485,42 @@ function buildHylle(){
   const shM = white ? whiteMat : slatMat;   // hylleplater
   const caM = white ? whiteMat : slatMat;   // bunnskap
   const DEP = 0.30, POST = 0.05;
-  // Bunnskap (sideboard) med dører
+  // Bunnskap (sideboard) med dører — følger romdelerens lengde
   const cy0 = 0.14, cyT = 0.68, ch = cyT - cy0;
-  box(0.44, ch, 1.9, caM, 0, cy0+ch/2, 0, hylle);
+  const caL = DIV_LEN - 0.1;
+  box(0.44, ch, caL, caM, 0, cy0+ch/2, 0, hylle);
   for(let i=1;i<4;i++)
-    box(0.006, ch-0.06, 0.005, darkMat, 0.223, cy0+ch/2, -0.95+i*0.475, hylle); // dørspor
+    box(0.006, ch-0.06, 0.005, darkMat, 0.223, cy0+ch/2, -caL/2+i*caL/4, hylle); // dørspor
   if(white) for(const pz of [zN+0.18, zS-0.18])
     box(0.03, cy0, 0.03, frM, 0.19, cy0/2, pz, hylle);                          // tynne ben
   // TV-panel i tre (bak TV-en)
-  box(0.06, 0.95, 1.56, slatMat, 0, 1.15, 0, hylle);
-  // Vertikale stolper gulv→tak (fremre + bakre)
-  const posts = white ? [zN+0.05, 0.0, zS-0.05]
-                      : [zN+0.03, zN+0.68, 0.0, zS-0.68, zS-0.03];
-  for(const pz of posts){
+  box(0.06, 0.95, Math.min(1.56, DIV_LEN-0.04), slatMat, 0, 1.15, 0, hylle);
+  // Åpent TV-felt: fulle stolper kun i endene, midtfeltet er fritt der TV-en henger
+  const TV_TOP = 1.72;                                    // TV-sonen er åpen opp hit
+  for(const pz of white ? [zN+0.05, zS-0.05] : [zN+0.03, zS-0.03]){
     box(POST, RH, POST, frM,  DEP/2, RH/2, pz, hylle);
     box(POST, RH, POST, frM, -DEP/2, RH/2, pz, hylle);
     if(!white) box(DEP, POST, POST, frM, 0, RH-0.42, pz, hylle);               // tverrbånd
   }
-  // Hyller
+  // Korte stolper i midtfeltet — kun over TV-sonen
+  const segH = RH - TV_TOP;
+  const midZ = Math.min(0.5, DIV_LEN/2 - 0.25);
+  for(const pz of white ? [0.0] : [-midZ, 0.0, midZ]){
+    box(POST, segH, POST, frM,  DEP/2, TV_TOP+segH/2, pz, hylle);
+    box(POST, segH, POST, frM, -DEP/2, TV_TOP+segH/2, pz, hylle);
+    if(!white) box(DEP, POST, POST, frM, 0, RH-0.42, pz, hylle);               // tverrbånd
+  }
+  // Hyller — alle over TV-sonen (indre endepunkter skalerer med lengden)
+  const s = DIV_LEN/2.0;
   if(white){
-    const list = [[2.02,zN,0.30],[1.66,zN,-0.10],[1.98,0.10,zS],[1.60,0.30,zS]]; // forskjøvne
+    const list = [[2.02,zN,0.30*s],[1.78,zN,-0.10*s],[1.98,0.10*s,zS],[1.78,0.30*s,zS]]; // forskjøvne
     for(const [sy,za,zb] of list)
       box(DEP+0.02, 0.035, zb-za, shM, 0, sy, (za+zb)/2, hylle);
   } else {
-    for(const sy of [1.02,1.42,1.86,2.18])                                       // jevnt grid
-      box(DEP, 0.035, 2.0, shM, 0, sy, 0, hylle);
+    for(const sy of [1.86,2.14])                                                 // grid over TV
+      box(DEP, 0.035, DIV_LEN, shM, 0, sy, 0, hylle);
   }
-  box(DEP+0.02, 0.04, 2.0, shM, 0, RH-0.05, 0, hylle);                           // topphylle
+  box(DEP+0.02, 0.04, DIV_LEN, shM, 0, RH-0.05, 0, hylle);                       // topphylle
 }
 buildHylle();
 hylle.visible = false;
@@ -531,11 +542,12 @@ const tvBench = new THREE.Group();
 tvBench.position.set(DIV_X, 0, RD - DIV_LEN/2);
 scene.add(tvBench);
 let benchMode = 1;                               // 0=av, 1=hengende, 2=gulv
-const BENCH_LEN = 1.8, BENCH_D = 0.40;
+const BENCH_D = 0.40;
 function buildTVBench(){
   tvBench.clear();
-  tvBench.visible = benchMode !== 0;
+  tvBench.visible = benchMode !== 0 && dividerType === 'spile';  // hylla har eget skap
   if(benchMode === 0) return;
+  const BENCH_LEN = Math.min(1.8, DIV_LEN - 0.2); // aldri lengre enn romdeleren
   const cx = FR_D/2 + BENCH_D/2 + 0.01;          // benk-senter litt ut fra østsiden
   if(benchMode === 1){
     const h = 0.30, yc = 0.55;                   // hengende: svever ~0,40 m over gulv
@@ -568,7 +580,7 @@ const SHELF_LIST = [
 let shelvesOn = false;
 function buildShelves(){
   shelves.clear();
-  shelves.visible = shelvesOn;
+  shelves.visible = shelvesOn && dividerType === 'spile';
   const cx = -FR_D/2 - SHELF_D/2 - 0.01;         // hyller stikker ut mot kjøkkenet (−x)
   for(const [sz, sy, len] of SHELF_LIST){
     box(SHELF_D, SHELF_T, len, slatMat, cx, sy, sz, shelves);
@@ -818,6 +830,27 @@ function setDividerX(v){
 divSlider.addEventListener('input', ()=>setDividerX(parseFloat(divSlider.value)));
 setDividerX(parseFloat(divSlider.value));
 
+/* Slider: lengde på romdeleren — bygger spilevegg/hylle/benk på nytt */
+const lenSlider = document.getElementById('lenSlider');
+const lenVal = document.getElementById('lenVal');
+const specLen = document.getElementById('specLen');
+function setDividerLen(v){
+  DIV_LEN = v;
+  const zC = RD - v/2;                    // alltid forankret i sørveggen
+  divider.position.z = zC;
+  hylle.position.z = zC;
+  tvGroup.position.z = zC;
+  tvBench.position.z = zC;
+  shelves.position.z = zC;
+  buildDivider();
+  buildHylle();
+  buildTVBench();
+  const txt = v.toFixed(2).replace('.',',') + ' m';
+  lenVal.textContent = txt;
+  specLen.textContent = 'romdeler ' + txt;
+}
+lenSlider.addEventListener('input', ()=>setDividerLen(parseFloat(lenSlider.value)));
+
 /* Slidere: spilebredde og mellomrom — bygger spileveggen på nytt */
 const slatSlider = document.getElementById('slatSlider');
 const gapSlider = document.getElementById('gapSlider');
@@ -918,7 +951,7 @@ function lookFrom(cx,cy,cz, tx,ty,tz){
 // Hjørne: sofavegg (øst) + glassvegg (nord) — ser diagonalt mot TV-en
 function viewSofaCorner(){    lookFrom(6.15, 0.62, 0.55,  3.4, 1.15, 3.3); }
 // Hjørne: glassvegg (nord) + kjøkken (vest) — ser innover i rommet
-function viewKitchenCorner(){ lookFrom(0.60, 0.62, 0.60,  3.7, 1.15, 3.4); }
+function viewKitchenCorner(){ lookFrom(0.95, 0.62, 0.95,  3.7, 1.15, 3.4); }
 btnViewSofa.onclick    = viewSofaCorner;
 btnViewKitchen.onclick = viewKitchenCorner;
 
@@ -934,6 +967,7 @@ function resetAll(){
   setVibe(0);
   // Spilevegg-slidere
   divSlider.value=3.2; setDividerX(3.2);
+  lenSlider.value=2.0; setDividerLen(2.0);
   slatSlider.value=45; gapSlider.value=25; updateSlats();
   // Treslag → eik
   woodIndex=0;
