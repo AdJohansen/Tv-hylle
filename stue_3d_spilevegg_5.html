@@ -41,6 +41,8 @@
   #controls button.off{color:var(--dim)}
   #controls button b{color:var(--accent)}
   #controls .btnrow{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  #controls .btnrow3{grid-template-columns:1fr 1fr 1fr}
+  #controls .btnrow3 button{min-width:0;padding:9px 4px;font-size:11px}
   #controls .btnrow button{min-width:112px;text-align:center;padding:9px 6px;
     font-size:11.5px}
   #btnToggleUI{align-self:flex-end;min-width:0;padding:7px 12px;font-size:11.5px}
@@ -172,9 +174,10 @@
     <button id="btnShelves" class="off"><b>Hyller</b> · av</button>
   </div>
   <button id="btnWood"><b>Treslag</b> · eik</button>
-  <div class="btnrow">
+  <div class="btnrow btnrow3">
     <button id="btnViewSofa"><b>Sofahjørne</b></button>
     <button id="btnViewKitchen"><b>Kjøkkenhjørne</b></button>
+    <button id="btnViewSeat"><b>Fra sofaen</b></button>
   </div>
   <button id="btnReset"><b>Nullstill alt</b></button>
   </div>
@@ -721,11 +724,13 @@ setVibe(0);   // start i Dag-modus
 /* ---------- Kamerakontroll (rotér + flytt + zoom) ---------- */
 const target = new THREE.Vector3(4.2, 1.15, 3.4);
 let theta = 2.0, phi = 1.42, dist = 3.0;
-const DIST_MIN=0.6, DIST_MAX=14, PHI_MIN=0.25, PHI_MAX=1.56;
+const DIST_MIN=0.6, DIST_MAX=14, PHI_MIN=0.25;
 
 function updateCamera(){
-  phi = Math.max(PHI_MIN, Math.min(PHI_MAX, phi));
   dist = Math.max(DIST_MIN, Math.min(DIST_MAX, dist));
+  // Kameraet kan gå under målhøyden (se oppover), men aldri under gulvet (y ≥ 0,12)
+  const phiMax = Math.min(2.8, Math.acos(Math.max(-1, Math.min(1, (0.12 - target.y)/dist))));
+  phi = Math.max(PHI_MIN, Math.min(phiMax, phi));
   camera.position.set(
     target.x + dist*Math.sin(phi)*Math.sin(theta),
     target.y + dist*Math.cos(phi),
@@ -794,6 +799,7 @@ canvas.addEventListener('touchmove', e=>{
       const p = new THREE.Vector3(nx, ny, 0.5).unproject(camera)
         .sub(camera.position).normalize().multiplyScalar(dist)
         .add(camera.position);                 // punktet under fingrene, på target-dybde
+      p.y = target.y;                          // hold høyden — ikke driv mot tak/gulv
       target.lerp(p, 1 - f);                   // inn mot punktet / ut fra punktet
       dist = newDist;
       clampTarget();
@@ -975,16 +981,25 @@ function lookFrom(cx,cy,cz, tx,ty,tz){
 function viewSofaCorner(){    lookFrom(6.15, 0.62, 0.55,  3.4, 1.15, 3.3); }
 // Hjørne: glassvegg (nord) + kjøkken (vest) — ser innover i rommet
 function viewKitchenCorner(){ lookFrom(0.95, 0.62, 0.95,  3.7, 1.15, 3.4); }
-// Spilevegg i fokus — kamera i stuedelen, ser rett mot TV-en/romdeleren
+// Spilevegg i fokus — kamera i stuedelen, ser rett mot TV-en/romdeleren.
+// Holder god avstand så hele romdeleren er i bildet, og klemmes innenfor østveggen.
 function viewDivider(){
   const dx = divider.position.x, dz = divider.position.z;
-  lookFrom(dx + 2.5, 1.30, dz - 1.3,  dx, 1.10, dz);
+  const cx = Math.min(dx + 3.0, RW - 0.25);
+  const cz = Math.max(dz - 1.65, 0.3);
+  lookFrom(cx, 1.45, cz,  dx, 1.10, dz);
 }
 // Mobil/iPad: samme kriterier som mobilmenyen
 const touchView = ()=>window.matchMedia('(max-width:640px), (pointer:coarse)').matches;
 const startView = ()=> touchView() ? viewDivider() : viewSofaCorner();
+// Fra sofaen — sittehøyde i sofaen, ser rett mot TV-en/romdeleren
+function viewFromSofa(){
+  const dx = divider.position.x, dz = divider.position.z;
+  lookFrom(5.85, 1.12, 3.35,  dx, 1.10, dz);
+}
 btnViewSofa.onclick    = viewSofaCorner;
 btnViewKitchen.onclick = viewKitchenCorner;
+document.getElementById('btnViewSeat').onclick = viewFromSofa;
 
 /* Nullstill alt til utgangspunktet */
 function resetAll(){
