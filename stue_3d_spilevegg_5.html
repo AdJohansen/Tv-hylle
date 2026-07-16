@@ -76,18 +76,29 @@
   #hint{position:fixed;bottom:12px;left:50%;transform:translateX(-50%);
     font-size:11px;color:var(--dim);z-index:4;pointer-events:none;
     transition:opacity 1s}
-  @media(max-width:640px){
+  /* Mobil/nettbrett-meny: smal skjerm ELLER berøringsskjerm (telefon + iPad) */
+  @media (max-width:640px), (pointer:coarse){
     #hint{display:none}
-    #specs{display:none}                       /* skjules når telefonmenyen er i bruk */
-    /* Telefonmeny: full bredde nederst, valgene som rullbart bunnark */
-    #controls{left:0;right:0;bottom:0;padding:8px;gap:8px;align-items:stretch;z-index:6}
-    #btnToggleUI{align-self:stretch;text-align:center;padding:13px;font-size:14px;
+    #specs{display:none}                       /* skjules når mobilmenyen er i bruk */
+    /* Full bredde nederst, valgene som rullbart bunnark */
+    #controls{left:0;right:0;bottom:0;padding:8px calc(8px + env(safe-area-inset-right)) calc(8px + env(safe-area-inset-bottom)) calc(8px + env(safe-area-inset-left));gap:8px;align-items:stretch;z-index:6}
+    #btnToggleUI{align-self:stretch;text-align:center;padding:14px;font-size:15px;
       font-weight:600;border-radius:12px;min-width:0}
-    #ctrlBody{max-height:64vh;overflow-y:auto;-webkit-overflow-scrolling:touch;
-      background:rgba(20,18,16,.72);border:1px solid var(--line);border-radius:12px;
-      padding:8px}
-    #controls button{min-width:auto;padding:11px 12px;font-size:13px}
-    #controls .btnrow button{padding:11px 6px;font-size:12.5px}
+    #ctrlBody{max-height:62vh;overflow-y:auto;-webkit-overflow-scrolling:touch;
+      background:rgba(20,18,16,.82);border:1px solid var(--line);border-radius:12px;
+      padding:10px;backdrop-filter:blur(8px)}
+    #controls button{min-width:auto;padding:13px 12px;font-size:14px}
+    #controls .btnrow button{padding:13px 6px;font-size:13.5px}
+    .pickbox .vbtns button{padding:12px 6px;font-size:13px}
+    #sliderBox input[type=range]{height:34px}   /* større treffområde for fingre */
+    #colorBox input[type=color]{width:56px;height:34px}
+    #colorBox .crow{font-size:13.5px;margin:8px 0}
+    #sliderBox label{font-size:13.5px}
+    .pickbox .vlabel{font-size:13.5px}
+  }
+  /* På brede nettbrett: legg menyen som en kolonne til høyre i stedet for full bredde */
+  @media (pointer:coarse) and (min-width:900px){
+    #controls{left:auto;width:360px}
   }
 </style>
 </head>
@@ -952,6 +963,14 @@ function lookFrom(cx,cy,cz, tx,ty,tz){
 function viewSofaCorner(){    lookFrom(6.15, 0.62, 0.55,  3.4, 1.15, 3.3); }
 // Hjørne: glassvegg (nord) + kjøkken (vest) — ser innover i rommet
 function viewKitchenCorner(){ lookFrom(0.95, 0.62, 0.95,  3.7, 1.15, 3.4); }
+// Spilevegg i fokus — kamera i stuedelen, ser rett mot TV-en/romdeleren
+function viewDivider(){
+  const dx = divider.position.x, dz = divider.position.z;
+  lookFrom(dx + 2.5, 1.30, dz - 1.3,  dx, 1.10, dz);
+}
+// Mobil/iPad: samme kriterier som mobilmenyen
+const touchView = ()=>window.matchMedia('(max-width:640px), (pointer:coarse)').matches;
+const startView = ()=> touchView() ? viewDivider() : viewSofaCorner();
 btnViewSofa.onclick    = viewSofaCorner;
 btnViewKitchen.onclick = viewKitchenCorner;
 
@@ -985,15 +1004,15 @@ function resetAll(){
   btnShelves.innerHTML='<b>Hyller</b> · av'; btnShelves.classList.add('off');
   // Romdeler → spilevegg, fasong → hvit
   setFasong(0); setType('spile');
-  // Kamera til sofahjørnet
-  viewSofaCorner();
+  // Kamera til startvinkelen (spilevegg på mobil/iPad, ellers sofahjørnet)
+  startView();
 }
 btnReset.onclick = resetAll;
 
 /* Skjul/vis hele valgpanelet — egen merkelapp for telefon */
 const btnToggleUI = document.getElementById('btnToggleUI');
 const ctrlBody = document.getElementById('ctrlBody');
-const isPhone = ()=>window.matchMedia('(max-width:640px)').matches;
+const isPhone = ()=>window.matchMedia('(max-width:640px), (pointer:coarse)').matches;
 function updateToggleLabel(){
   const hidden = ctrlBody.classList.contains('hidden');
   btnToggleUI.textContent = isPhone()
@@ -1009,8 +1028,8 @@ if(isPhone()) ctrlBody.classList.add('hidden');
 updateToggleLabel();
 addEventListener('resize', updateToggleLabel);
 
-// Start i sofahjørnet
-viewSofaCorner();
+// Start: spilevegg i fokus på mobil/iPad, ellers sofahjørnet
+startView();
 
 /* ---------- Render ---------- */
 function resize(){
