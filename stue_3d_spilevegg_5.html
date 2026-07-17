@@ -54,7 +54,8 @@
   #sliderBox label{display:block;font-size:12px;margin-bottom:6px;color:var(--text)}
   #sliderBox label b{color:var(--accent)}
   #sliderBox span{color:var(--dim);font-variant-numeric:tabular-nums}
-  #sliderBox input[type=range]{width:100%;accent-color:var(--accent);cursor:pointer}
+  #sliderBox input[type=range]{width:100%;accent-color:var(--accent);cursor:pointer;
+    touch-action:none}   /* hindre at meny-scroll stjeler slider-draget */
   #sliderBox label.mt{margin-top:10px}
 
   #colorBox{background:rgba(31,27,23,.92);border:1px solid var(--line);
@@ -74,6 +75,12 @@
     cursor:pointer;text-align:center;min-width:0}
   .pickbox .vbtns button.active{color:var(--text);border-color:var(--accent);
     background:#3a2f22}
+  .pickbox label{display:block;font-size:12px;margin:10px 0 6px;color:var(--text)}
+  .pickbox label b{color:var(--accent)}
+  .pickbox label span{color:var(--dim);font-variant-numeric:tabular-nums}
+  .pickbox input[type=range]{width:100%;accent-color:var(--accent);cursor:pointer;
+    touch-action:none}
+  .pickbox .wbtn{width:100%;margin-top:10px;text-align:center}
 
   #hint{position:fixed;bottom:12px;left:50%;transform:translateX(-50%);
     font-size:11px;color:var(--dim);z-index:4;pointer-events:none;
@@ -138,6 +145,15 @@
       <button data-fasong="0" class="active">Hvit</button>
       <button data-fasong="1">Tre-grid</button>
     </div>
+    <button id="btnShuffle" class="wbtn">Ny variant</button>
+    <label><b>Tilleggsmoduler</b> · <span id="modVal">ingen</span></label>
+    <div class="vbtns">
+      <button data-mod="katt">+ Kattetårn</button>
+      <button data-mod="bok">+ Bokhylle</button>
+      <button data-mod="skap">+ Skap</button>
+      <button data-mod="open">+ Åpen reol</button>
+    </div>
+    <button id="btnModRemove" class="wbtn">Fjern siste modul</button>
   </div>
   <div id="sliderBox">
     <label><b>Plassering</b><br><span id="divVal"></span></label>
@@ -173,7 +189,10 @@
     <button id="btnBench"><b>TV-benk</b> · hengende</button>
     <button id="btnShelves" class="off"><b>Hyller</b> · av</button>
   </div>
-  <button id="btnWood"><b>Treslag</b> · eik</button>
+  <div class="btnrow">
+    <button id="btnWood"><b>Treslag</b> · eik</button>
+    <button id="btnWalls"><b>Vegger</b> · på</button>
+  </div>
   <div class="btnrow btnrow3">
     <button id="btnViewSofa"><b>Sofahjørne</b></button>
     <button id="btnViewKitchen"><b>Kjøkkenhjørne</b></button>
@@ -293,9 +312,11 @@ scene.add(ceilL);
 
 /* ---------- Vegger ---------- */
 const T = 0.1; // veggtykkelse
+const walls = new THREE.Group();   // alle veggdeler — kan slås av/på
+scene.add(walls);
 
 // Vest (x=0): kjøkkenvegg, hel — 5,04 m lang
-box(T, RH, RD2+2*T, wallMat, -T/2, RH/2, RD2/2);
+box(T, RH, RD2+2*T, wallMat, -T/2, RH/2, RD2/2, walls);
 
 // Øst (x=6,51): vegg bak sofaen — 4,49 m, med dypt vindu med "hylle"
 // Vinduet: 1,80 m langt, starter 8 cm fra sørveggen, nisje 30 cm dyp.
@@ -308,33 +329,33 @@ const WIN_SILL = 1.0, WIN_TOP = 2.1;
 const WIN_D = 0.30;                        // nisjedybde = hylla
 
 // Veggsegmenter rundt åpningen
-box(T, RH, WIN_Z1, wallMat, RW+T/2, RH/2, WIN_Z1/2);                       // nord for vinduet
-box(T, RH, WIN_OFF, wallMat, RW+T/2, RH/2, WIN_Z2 + WIN_OFF/2);            // 8 cm-stripa mot sørveggen
-box(T, WIN_SILL, WIN_L, wallMat, RW+T/2, WIN_SILL/2, WIN_ZC);              // under vinduet
-box(T, RH-WIN_TOP, WIN_L, wallMat, RW+T/2, WIN_TOP+(RH-WIN_TOP)/2, WIN_ZC);// over vinduet
+box(T, RH, WIN_Z1, wallMat, RW+T/2, RH/2, WIN_Z1/2, walls);                       // nord for vinduet
+box(T, RH, WIN_OFF, wallMat, RW+T/2, RH/2, WIN_Z2 + WIN_OFF/2, walls);            // 8 cm-stripa mot sørveggen
+box(T, WIN_SILL, WIN_L, wallMat, RW+T/2, WIN_SILL/2, WIN_ZC, walls);              // under vinduet
+box(T, RH-WIN_TOP, WIN_L, wallMat, RW+T/2, WIN_TOP+(RH-WIN_TOP)/2, WIN_ZC, walls);// over vinduet
 
 // Nisjen — 30 cm dyp
 const sillMat = new THREE.MeshStandardMaterial({color:0xcdb894, roughness:0.55});
-box(WIN_D+T, 0.04, WIN_L, sillMat, RW+(WIN_D+T)/2, WIN_SILL-0.02, WIN_ZC); // hylla (vinduskarm)
-box(WIN_D, 0.03, WIN_L, wallMat, RW+T/2+WIN_D/2, WIN_TOP+0.015, WIN_ZC);   // topp i nisjen
-box(WIN_D, WIN_TOP-WIN_SILL, 0.03, wallMat, RW+T/2+WIN_D/2, (WIN_SILL+WIN_TOP)/2, WIN_Z1+0.015); // side nord
-box(WIN_D, WIN_TOP-WIN_SILL, 0.03, wallMat, RW+T/2+WIN_D/2, (WIN_SILL+WIN_TOP)/2, WIN_Z2-0.015); // side sør
+box(WIN_D+T, 0.04, WIN_L, sillMat, RW+(WIN_D+T)/2, WIN_SILL-0.02, WIN_ZC, walls); // hylla (vinduskarm)
+box(WIN_D, 0.03, WIN_L, wallMat, RW+T/2+WIN_D/2, WIN_TOP+0.015, WIN_ZC, walls);   // topp i nisjen
+box(WIN_D, WIN_TOP-WIN_SILL, 0.03, wallMat, RW+T/2+WIN_D/2, (WIN_SILL+WIN_TOP)/2, WIN_Z1+0.015, walls); // side nord
+box(WIN_D, WIN_TOP-WIN_SILL, 0.03, wallMat, RW+T/2+WIN_D/2, (WIN_SILL+WIN_TOP)/2, WIN_Z2-0.015, walls); // side sør
 
 // Glass og ramme ytterst i nisjen
 const winGlass = new THREE.Mesh(new THREE.PlaneGeometry(WIN_L-0.08, WIN_TOP-WIN_SILL-0.08), glassMat);
 winGlass.rotation.y = -Math.PI/2;
 winGlass.position.set(RW+WIN_D-0.03, (WIN_SILL+WIN_TOP)/2, WIN_ZC);
-scene.add(winGlass);
-box(0.04, WIN_TOP-WIN_SILL, 0.05, frameMat, RW+WIN_D-0.02, (WIN_SILL+WIN_TOP)/2, WIN_Z1+0.05);
-box(0.04, WIN_TOP-WIN_SILL, 0.05, frameMat, RW+WIN_D-0.02, (WIN_SILL+WIN_TOP)/2, WIN_Z2-0.05);
-box(0.04, 0.05, WIN_L, frameMat, RW+WIN_D-0.02, WIN_SILL+0.045, WIN_ZC);
-box(0.04, 0.05, WIN_L, frameMat, RW+WIN_D-0.02, WIN_TOP-0.045, WIN_ZC);
+walls.add(winGlass);
+box(0.04, WIN_TOP-WIN_SILL, 0.05, frameMat, RW+WIN_D-0.02, (WIN_SILL+WIN_TOP)/2, WIN_Z1+0.05, walls);
+box(0.04, WIN_TOP-WIN_SILL, 0.05, frameMat, RW+WIN_D-0.02, (WIN_SILL+WIN_TOP)/2, WIN_Z2-0.05, walls);
+box(0.04, 0.05, WIN_L, frameMat, RW+WIN_D-0.02, WIN_SILL+0.045, WIN_ZC, walls);
+box(0.04, 0.05, WIN_L, frameMat, RW+WIN_D-0.02, WIN_TOP-0.045, WIN_ZC, walls);
 // "Dagslys" bak glasset
 const winSky = new THREE.Mesh(new THREE.PlaneGeometry(WIN_L, WIN_TOP-WIN_SILL),
   new THREE.MeshBasicMaterial({color:0xd6e6ef}));
 winSky.rotation.y = -Math.PI/2;
 winSky.position.set(RW+WIN_D+0.02, (WIN_SILL+WIN_TOP)/2, WIN_ZC);
-scene.add(winSky);
+walls.add(winSky);
 // Mykt lys inn gjennom vinduet
 const winLight = new THREE.PointLight(0xdceaf2, 0.35, 4);
 winLight.position.set(RW-0.3, 1.7, WIN_ZC);
@@ -343,21 +364,21 @@ const eastWin = new THREE.Mesh(new THREE.PlaneGeometry(1.4, 1.2),
   new THREE.MeshBasicMaterial({color:0xcfe0ea}));
 eastWin.rotation.y = -Math.PI/2;
 eastWin.position.set(RW-0.001, 1.5, 1.6);
-scene.add(eastWin);
-box(0.04, 1.28, 1.48, frameMat, RW-0.02, 1.5, 1.6);
+walls.add(eastWin);
+box(0.04, 1.28, 1.48, frameMat, RW-0.02, 1.5, 1.6, walls);
 const eastWin2 = new THREE.Mesh(new THREE.PlaneGeometry(1.4, 1.2),
   new THREE.MeshBasicMaterial({color:0xcfe0ea}));
 eastWin2.rotation.y = -Math.PI/2;
 eastWin2.position.set(RW-0.021, 1.5, 1.6);
-scene.add(eastWin2);
+walls.add(eastWin2);
 
 // Nord (z=0): balkongvegg — stor glassflate delt av én midtstolpe
 const WIN_SIDE = 0.55;                          // veggstubb hver side (20 cm mer enn før)
 const gh = RH - 0.35;                           // glasshøyde
 const postX = RW/2, postW = 0.06;               // den ene midtstolpen
-box(WIN_SIDE, RH, T, wallMat, WIN_SIDE/2, RH/2, -T/2);       // veggstubb vest
-box(WIN_SIDE, RH, T, wallMat, RW-WIN_SIDE/2, RH/2, -T/2);    // veggstubb øst
-box(RW, 0.3, T, wallMat, RW/2, RH-0.15, -T/2);              // felt over glass
+box(WIN_SIDE, RH, T, wallMat, WIN_SIDE/2, RH/2, -T/2, walls);       // veggstubb vest
+box(WIN_SIDE, RH, T, wallMat, RW-WIN_SIDE/2, RH/2, -T/2, walls);    // veggstubb øst
+box(RW, 0.3, T, wallMat, RW/2, RH-0.15, -T/2, walls);              // felt over glass
 // To store glassfelt, kun delt i midten
 const paneW = (postX - postW/2) - WIN_SIDE;
 const leftC = WIN_SIDE + paneW/2;
@@ -365,19 +386,19 @@ const rightC = RW - WIN_SIDE - paneW/2;
 for(const gx of [leftC, rightC]){
   const g = new THREE.Mesh(new THREE.PlaneGeometry(paneW-0.02, gh), glassMat);
   g.position.set(gx, gh/2 + 0.02, -0.02);
-  scene.add(g);
+  walls.add(g);
 }
-box(postW, RH-0.3, 0.06, frameMat, postX, (RH-0.3)/2, -0.03);     // midtstolpe
-box(RW-2*WIN_SIDE, 0.05, 0.06, frameMat, RW/2, 0.025, -0.03);     // karm bunn
-box(RW-2*WIN_SIDE, 0.05, 0.06, frameMat, RW/2, RH-0.32, -0.03);   // karm topp
+box(postW, RH-0.3, 0.06, frameMat, postX, (RH-0.3)/2, -0.03, walls);     // midtstolpe
+box(RW-2*WIN_SIDE, 0.05, 0.06, frameMat, RW/2, 0.025, -0.03, walls);     // karm bunn
+box(RW-2*WIN_SIDE, 0.05, 0.06, frameMat, RW/2, RH-0.32, -0.03, walls);   // karm topp
 
 // Sør — trappet vegg:
 // Høyre del (mot soverom) ved z=4,49, fra hjørnet ved x=3,2 til østveggen
-box(RW-XSTEP, RH, T, wallMat, XSTEP+(RW-XSTEP)/2, RH/2, RD+T/2);
+box(RW-XSTEP, RH, T, wallMat, XSTEP+(RW-XSTEP)/2, RH/2, RD+T/2, walls);
 // Hjørnestykke ved x=3,2 som forbinder de to dybdene (4,49 → 5,04).
 // Ligger på innsiden av linjen slik at det flukter med soveromsveggen
 // og ikke stikker ut i stuedelen.
-box(T, RH, RD2-RD, wallMat, XSTEP-T/2, RH/2, RD+(RD2-RD)/2);
+box(T, RH, RD2-RD, wallMat, XSTEP-T/2, RH/2, RD+(RD2-RD)/2, walls);
 // Venstre del (mot bad/gang) ved z=5,04 — døråpningen er flyttet mot kjøkkenet
 // slik at det er plass til 2,5 lysbrytere (2,5 × 8,5 cm ≈ 21 cm) mellom
 // spilevegg-hjørnet (x=3,2) og dørkarmen.
@@ -386,13 +407,13 @@ const DOOR_GAP = 2.5 * SWITCH;              // ≈ 0,21 m veggstripe ved hjørne
 const DOOR_W = 0.9;                         // døråpningens bredde
 const DOOR_E = XSTEP - DOOR_GAP;            // østkant av åpningen (x ≈ 2,99)
 const DOOR_V = DOOR_E - DOOR_W;             // vestkant av åpningen (x ≈ 2,09)
-box(DOOR_V, RH, T, wallMat, DOOR_V/2, RH/2, RD2+T/2);                      // vegg vest for åpningen
-box(DOOR_GAP, RH, T, wallMat, DOOR_E+DOOR_GAP/2, RH/2, RD2+T/2);           // bryterstripe ved hjørnet
-box(DOOR_W, RH-2.1, T, wallMat, DOOR_V+DOOR_W/2, 2.1+(RH-2.1)/2, RD2+T/2); // felt over døråpning
+box(DOOR_V, RH, T, wallMat, DOOR_V/2, RH/2, RD2+T/2, walls);                      // vegg vest for åpningen
+box(DOOR_GAP, RH, T, wallMat, DOOR_E+DOOR_GAP/2, RH/2, RD2+T/2, walls);           // bryterstripe ved hjørnet
+box(DOOR_W, RH-2.1, T, wallMat, DOOR_V+DOOR_W/2, 2.1+(RH-2.1)/2, RD2+T/2, walls); // felt over døråpning
 // Lysbrytere på stripa (dobbel ramme, norsk høyde ca. 1,0 m)
 const switchMat = new THREE.MeshStandardMaterial({color:0xf2efe8, roughness:0.5});
-box(SWITCH-0.01, SWITCH-0.01, 0.014, switchMat, DOOR_E+DOOR_GAP/2 - SWITCH/2, 1.0, RD2-0.007);
-box(SWITCH-0.01, SWITCH-0.01, 0.014, switchMat, DOOR_E+DOOR_GAP/2 + SWITCH/2, 1.0, RD2-0.007);
+box(SWITCH-0.01, SWITCH-0.01, 0.014, switchMat, DOOR_E+DOOR_GAP/2 - SWITCH/2, 1.0, RD2-0.007, walls);
+box(SWITCH-0.01, SWITCH-0.01, 0.014, switchMat, DOOR_E+DOOR_GAP/2 + SWITCH/2, 1.0, RD2-0.007, walls);
 
 /* ---------- Balkong utenfor ---------- */
 const balc = new THREE.Mesh(new THREE.PlaneGeometry(RW, 2.2),
@@ -491,6 +512,16 @@ const hylle = new THREE.Group();
 hylle.position.set(DIV_X, 0, RD - DIV_LEN/2);
 scene.add(hylle);
 let hylleFasong = 0;
+let hylleSeed = 7;                   // styrer variasjonen i utstikk-hyllene
+// Tilleggsmoduler som stables på den frie enden av hylla (mot stuen)
+const MODULES = {
+  katt: {name:'Kattetårn', w:0.55},
+  bok:  {name:'Bokhylle',  w:0.60},
+  skap: {name:'Skap',      w:0.60},
+  open: {name:'Åpen reol', w:0.55},
+};
+let hylleModules = [];               // rekkefølgen = innerst → ytterst
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 function buildHylle(){
   hylle.clear();
   const zN = -DIV_LEN/2, zS = DIV_LEN/2;
@@ -509,32 +540,83 @@ function buildHylle(){
     box(0.03, cy0, 0.03, frM, 0.19, cy0/2, pz, hylle);                          // tynne ben
   // TV-panel i tre (bak TV-en)
   box(0.06, 0.95, Math.min(1.56, DIV_LEN-0.04), slatMat, 0, 1.15, 0, hylle);
-  // Åpent TV-felt: fulle stolper kun i endene, midtfeltet er fritt der TV-en henger
+  // Åpent TV-felt: fulle stolper i endene, én modulstolpe midt over TV-sonen.
+  // Feltet over TV-en er alltid 1 hyllenivå × 2 felt.
   const TV_TOP = 1.72;                                    // TV-sonen er åpen opp hit
-  for(const pz of white ? [zN+0.05, zS-0.05] : [zN+0.03, zS-0.03]){
-    box(POST, RH, POST, frM,  DEP/2, RH/2, pz, hylle);
-    box(POST, RH, POST, frM, -DEP/2, RH/2, pz, hylle);
-    if(!white) box(DEP, POST, POST, frM, 0, RH-0.42, pz, hylle);               // tverrbånd
-  }
-  // Korte stolper i midtfeltet — kun over TV-sonen
   const segH = RH - TV_TOP;
-  const midZ = Math.min(0.5, DIV_LEN/2 - 0.25);
-  for(const pz of white ? [0.0] : [-midZ, 0.0, midZ]){
-    box(POST, segH, POST, frM,  DEP/2, TV_TOP+segH/2, pz, hylle);
-    box(POST, segH, POST, frM, -DEP/2, TV_TOP+segH/2, pz, hylle);
-    if(!white) box(DEP, POST, POST, frM, 0, RH-0.42, pz, hylle);               // tverrbånd
+  const inner0 = zN + 0.03, inner1 = zS - 0.03;
+  const midPost = (inner0 + inner1)/2;
+  for(const [pz, end] of [[inner0,true],[midPost,false],[inner1,true]]){
+    const h  = end ? RH : segH;                           // ender: gulv→tak, midt: over TV
+    const yc = end ? RH/2 : TV_TOP + segH/2;
+    box(POST, h, POST, frM,  DEP/2, yc, pz, hylle);
+    box(POST, h, POST, frM, -DEP/2, yc, pz, hylle);
+    if(!white) box(DEP, POST, POST, frM, 0, RH-0.42, pz, hylle);   // tverrbånd
   }
-  // Hyller — alle over TV-sonen (indre endepunkter skalerer med lengden)
-  const s = DIV_LEN/2.0;
-  if(white){
-    const list = [[2.02,zN,0.30*s],[1.78,zN,-0.10*s],[1.98,0.10*s,zS],[1.78,0.30*s,zS]]; // forskjøvne
-    for(const [sy,za,zb] of list)
-      box(DEP+0.02, 0.035, zb-za, shM, 0, sy, (za+zb)/2, hylle);
-  } else {
-    for(const sy of [1.86,2.14])                                                 // grid over TV
-      box(DEP, 0.035, DIV_LEN, shM, 0, sy, 0, hylle);
+  // Én hyllerad over TV-en, delt i to felt av midtstolpen
+  const rng = mulberry32(hylleSeed);                      // brukes av utstikk-hyllene
+  const sy = 2.00;
+  for(const [sza, szb] of [[inner0+POST/2, midPost-POST/2],[midPost+POST/2, inner1-POST/2]])
+    box(white ? DEP+0.02 : DEP, 0.035, szb-sza, shM, 0, sy, (sza+szb)/2, hylle);
+  // Hylleplass rett over TV-en — full bredde, midtstolpen hviler på den
+  box(white ? DEP+0.02 : DEP, 0.035, inner1-inner0-POST, shM, 0, TV_TOP-0.02, 0, hylle);
+  box(DEP+0.02, 0.04, DIV_LEN, shM, 0, RH-0.05, 0, hylle);         // topphylle
+  // Utstikkende hyller på den frie enden (mot stuen) — som i inspirasjonsbildet.
+  // Lengdene varierer med "Ny variant"; de kan stikke ut siden TV-sonen ikke berøres.
+  for(const uy of [1.05, 1.55, 2.14]){
+    if(hylleModules.length) break;                         // utstikk kun uten moduler
+    if(rng() > 0.85) continue;                             // noen utelates for variasjon
+    const uL = 0.30 + rng()*0.30;
+    box(DEP+0.02, 0.035, uL, shM, 0, uy, zN - uL/2 + 0.03, hylle);
+    box(0.02, 0.10, 0.02, frM, DEP/2, uy-0.07, zN - uL + 0.08, hylle); // tynn stag under tuppen
   }
-  box(DEP+0.02, 0.04, DIV_LEN, shM, 0, RH-0.05, 0, hylle);                       // topphylle
+  // Tilleggsmoduler — stables utover fra den frie enden (mot stuen)
+  const sisalM = new THREE.MeshStandardMaterial({color:0xc9ab7c, roughness:0.95});
+  const cushM  = new THREE.MeshStandardMaterial({color:0xe6dcc8, roughness:0.95});
+  let modEdge = zN;
+  for(const type of hylleModules){
+    const w = MODULES[type].w;
+    const za = modEdge - w, zb = modEdge, zc = (za+zb)/2;
+    if(RD - DIV_LEN/2 + za < 0.7) break;      // stopp før balkongveggen
+    // ytterstolper (indre side deler stolper med forrige del)
+    box(POST, RH, POST, frM,  DEP/2, RH/2, za+POST/2, hylle);
+    box(POST, RH, POST, frM, -DEP/2, RH/2, za+POST/2, hylle);
+    if(type === 'katt'){
+      // Kattetårn: ramme med plattformer, sisalstolpe og kattehus med hull
+      box(DEP+0.02, 0.03, w, shM, 0, 0.03, zc, hylle);                  // bunnplate
+      box(DEP+0.02, 0.03, w, shM, 0, 1.80, zc, hylle);                  // topplate
+      box(DEP*0.75, 0.05, w*0.5, cushM, 0, 1.845, zc, hylle);           // pute på toppen
+      box(DEP*0.9, 0.03, w*0.55, shM, 0, 0.62, zb - w*0.30, hylle);     // plattform 1
+      box(DEP*0.75, 0.05, w*0.45, cushM, 0, 0.66, zb - w*0.30, hylle);
+      box(DEP*0.9, 0.03, w*0.55, shM, 0, 1.22, za + w*0.30, hylle);     // plattform 2
+      box(DEP*0.75, 0.05, w*0.45, cushM, 0, 1.26, za + w*0.30, hylle);
+      box(DEP, 0.46, w*0.58, shM, 0, 0.29, za + w*0.34, hylle);         // kattehus
+      const hole = new THREE.Mesh(new THREE.CircleGeometry(0.085, 20),
+        new THREE.MeshBasicMaterial({color:0x120e0a}));
+      hole.rotation.y = Math.PI/2;
+      hole.position.set(DEP/2+0.002, 0.30, za + w*0.34);
+      hylle.add(hole);
+      const sp = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 1.72, 10), sisalM);
+      sp.position.set(0, 0.92, zb - w*0.26);
+      sp.castShadow = true;
+      hylle.add(sp);
+    } else if(type === 'bok'){
+      // Bokhylle: tette hyller i full høyde med endevegg
+      box(DEP, RH, 0.03, shM, 0, RH/2, za+0.02, hylle);                 // endevegg ytterst
+      for(let y=0.28; y<RH-0.15; y+=0.34)
+        box(DEP, 0.03, w-0.06, shM, 0, y, zc+0.01, hylle);
+    } else if(type === 'skap'){
+      // Lukket skap i full høyde med dørspor
+      box(DEP, RH-0.08, w-0.03, caM, 0, (RH-0.08)/2+0.02, zc, hylle);
+      box(0.006, RH-0.4, 0.006, darkMat, DEP/2+0.003, (RH-0.08)/2, zc, hylle);
+    } else {
+      // Åpen reol: luftige hyller
+      for(const y of [0.30, 0.95, 1.60])
+        box(DEP, 0.03, w-0.06, shM, 0, y, zc, hylle);
+      box(DEP+0.02, 0.04, w, shM, 0, RH-0.05, zc, hylle);               // topphylle
+    }
+    modEdge = za;
+  }
 }
 buildHylle();
 hylle.visible = false;
@@ -923,6 +1005,29 @@ function setFasong(i){
   fasongBtns.forEach(b=>b.classList.toggle('active', parseInt(b.dataset.fasong)===i));
 }
 fasongBtns.forEach(b=>b.onclick = ()=>setFasong(parseInt(b.dataset.fasong)));
+document.getElementById('btnShuffle').onclick = ()=>{
+  hylleSeed = (Math.random()*1e9)|0;      // ny tilfeldig fordeling av hylleplater
+  buildHylle();
+};
+/* Tilleggsmoduler: legg til/fjern på den frie enden */
+const modVal = document.getElementById('modVal');
+function updateModVal(){
+  modVal.textContent = hylleModules.length
+    ? hylleModules.map(t=>MODULES[t].name).join(' + ')
+    : 'ingen';
+}
+document.querySelectorAll('#fasongBox [data-mod]').forEach(b=>b.onclick = ()=>{
+  const used = hylleModules.reduce((s,t)=>s+MODULES[t].w, 0);
+  if(RD - DIV_LEN - used - MODULES[b.dataset.mod].w < 0.7) return;  // ikke plass mot balkongen
+  hylleModules.push(b.dataset.mod);
+  updateModVal();
+  buildHylle();
+});
+document.getElementById('btnModRemove').onclick = ()=>{
+  hylleModules.pop();
+  updateModVal();
+  buildHylle();
+};
 applyDividerType();
 
 /* Fargevelgere: vegg+tak (samme farge), kjøkken og fliser */
@@ -949,6 +1054,12 @@ btnWood.onclick = ()=>{
   slatMat.color.setHex(WOODS[woodIndex].color);
   slatMat.roughness = WOODS[woodIndex].rough;
   btnWood.innerHTML = '<b>Treslag</b> · ' + WOODS[woodIndex].name;
+};
+const btnWalls = document.getElementById('btnWalls');
+btnWalls.onclick = ()=>{
+  walls.visible = !walls.visible;
+  btnWalls.innerHTML = '<b>Vegger</b> · ' + (walls.visible?'på':'av');
+  btnWalls.classList.toggle('off', !walls.visible);
 };
 btnFurn.onclick = ()=>{
   furniture.visible = !furniture.visible;
@@ -1029,8 +1140,12 @@ function resetAll(){
   btnBench.innerHTML='<b>TV-benk</b> · hengende'; btnBench.classList.remove('off');
   shelvesOn=false; shelves.visible=false;
   btnShelves.innerHTML='<b>Hyller</b> · av'; btnShelves.classList.add('off');
-  // Romdeler → spilevegg, fasong → hvit
+  // Romdeler → spilevegg, fasong → hvit, hyllemoduler til standard
+  hylleSeed=7;
+  hylleModules.length=0; updateModVal();
   setFasong(0); setType('spile');
+  // Vegger på
+  walls.visible=true; btnWalls.innerHTML='<b>Vegger</b> · på'; btnWalls.classList.remove('off');
   // Kamera til startvinkelen (spilevegg på mobil/iPad, ellers sofahjørnet)
   startView();
 }
