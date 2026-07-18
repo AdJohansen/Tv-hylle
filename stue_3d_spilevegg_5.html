@@ -133,10 +133,11 @@
   <button id="btnToggleUI">Skjul valg ▾</button>
   <div id="ctrlBody">
   <div id="typeBox" class="pickbox">
-    <div class="vlabel"><b>Romdeler</b></div>
+    <div class="vlabel"><b>Scene</b></div>
     <div class="vbtns">
       <button data-type="spile" class="active">Spilevegg</button>
       <button data-type="hylle">Hylle</button>
+      <button data-type="vegg">TV på vegg</button>
     </div>
   </div>
   <div id="fasongBox" class="pickbox" style="display:none">
@@ -154,6 +155,17 @@
       <button data-mod="open">+ Åpen reol</button>
     </div>
     <button id="btnModRemove" class="wbtn">Fjern siste modul</button>
+  </div>
+  <div id="veggBox" class="pickbox" style="display:none">
+    <div class="vlabel"><b>TV på vegg</b></div>
+    <label><b>Synsavstand</b> (hode → TV) · <span id="distVal">2,40 m</span></label>
+    <input type="range" id="distSlider" min="1.6" max="3.4" step="0.05" value="2.4">
+    <label><b>Hylledybde bak sofa</b> · <span id="depthVal">35 cm</span></label>
+    <input type="range" id="depthSlider" min="0.2" max="0.6" step="0.05" value="0.35">
+    <div class="vbtns">
+      <button data-bak="1" class="active">Med skap</button>
+      <button data-bak="0">Uten skap</button>
+    </div>
   </div>
   <div id="sliderBox">
     <label><b>Plassering</b><br><span id="divVal"></span></label>
@@ -689,55 +701,117 @@ buildShelves();
 /* ---------- Møbler i stuedelen ---------- */
 const furniture = new THREE.Group();
 scene.add(furniture);
+// Sofagruppa (sofa, teppe, stuebord) — skjules i "TV på vegg"-scenen
+const sofaSet = new THREE.Group();
+furniture.add(sofaSet);
 
 // Teppe
 const rug = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 1.8), rugMat);
 rug.rotation.x = -Math.PI/2;
 rug.position.set(5.0, 0.005, 3.4);
 rug.receiveShadow = true;
-furniture.add(rug);
+sofaSet.add(rug);
 
 // Sweef Gorilla mot østveggen, vendt mot TV-en — dyp, lav og myk modulsofa
 // Lav base/plattform
-box(1.15, 0.16, 2.25, sofaMat, 5.875, 0.08, 3.325, furniture);        // base
+box(1.15, 0.16, 2.25, sofaMat, 5.875, 0.08, 3.325, sofaSet);        // base
 // Lavt ryggstøtte-panel mot veggen
-box(0.22, 0.50, 2.25, sofaMat, 6.34, 0.41, 3.325, furniture);         // ryggpanel
+box(0.22, 0.50, 2.25, sofaMat, 6.34, 0.41, 3.325, sofaSet);         // ryggpanel
 // Tunge, lave armlener i hver ende
-box(1.15, 0.42, 0.26, sofaMat, 5.875, 0.37, 2.33, furniture);         // armlene sør
-box(1.15, 0.42, 0.26, sofaMat, 5.875, 0.37, 4.32, furniture);         // armlene nord
+box(1.15, 0.42, 0.26, sofaMat, 5.875, 0.37, 2.33, sofaSet);         // armlene sør
+box(1.15, 0.42, 0.26, sofaMat, 5.875, 0.37, 4.32, sofaSet);         // armlene nord
 // To store, chunky seteputer
-box(0.80, 0.22, 0.82, sofaMat, 5.80, 0.27, 2.89, furniture);
-box(0.80, 0.22, 0.82, sofaMat, 5.80, 0.27, 3.76, furniture);
+box(0.80, 0.22, 0.82, sofaMat, 5.80, 0.27, 2.89, sofaSet);
+box(0.80, 0.22, 0.82, sofaMat, 5.80, 0.27, 3.76, sofaSet);
 // To store, myke ryggputer
-box(0.26, 0.50, 0.82, sofaMat, 6.19, 0.63, 2.89, furniture);
-box(0.26, 0.50, 0.82, sofaMat, 6.19, 0.63, 3.76, furniture);
+box(0.26, 0.50, 0.82, sofaMat, 6.19, 0.63, 2.89, sofaSet);
+box(0.26, 0.50, 0.82, sofaMat, 6.19, 0.63, 3.76, sofaSet);
 
 // Stuebord
-box(0.7, 0.05, 1.1, darkMat, 4.9, 0.35, 3.35, furniture);
-box(0.05, 0.33, 0.05, darkMat, 4.6, 0.165, 2.95, furniture);
-box(0.05, 0.33, 0.05, darkMat, 5.2, 0.165, 2.95, furniture);
-box(0.05, 0.33, 0.05, darkMat, 4.6, 0.165, 3.75, furniture);
-box(0.05, 0.33, 0.05, darkMat, 5.2, 0.165, 3.75, furniture);
+box(0.7, 0.05, 1.1, darkMat, 4.9, 0.35, 3.35, sofaSet);
+box(0.05, 0.33, 0.05, darkMat, 4.6, 0.165, 2.95, sofaSet);
+box(0.05, 0.33, 0.05, darkMat, 5.2, 0.165, 2.95, sofaSet);
+box(0.05, 0.33, 0.05, darkMat, 4.6, 0.165, 3.75, sofaSet);
+box(0.05, 0.33, 0.05, darkMat, 5.2, 0.165, 3.75, sofaSet);
 
-// Spisebord i nordenden
+// Spisebord i nordenden — egen gruppe, skjules i "TV på vegg"-scenen
+const diningSet = new THREE.Group();
+furniture.add(diningSet);
 const tableTop = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.55, 0.04, 32),
   new THREE.MeshStandardMaterial({color:0x9a7850, roughness:0.6}));
 tableTop.position.set(4.6, 0.74, 1.1);
 tableTop.castShadow = true;
-furniture.add(tableTop);
+diningSet.add(tableTop);
 const tableLeg = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.14, 0.72, 16), darkMat);
 tableLeg.position.set(4.6, 0.36, 1.1);
-furniture.add(tableLeg);
+diningSet.add(tableLeg);
 for(const [cx,cz] of [[3.95,1.1],[5.25,1.1],[4.6,0.5],[4.6,1.7]]){
   const seat = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.18, 0.05, 16),
     new THREE.MeshStandardMaterial({color:0x3a332c, roughness:0.8}));
   seat.position.set(cx, 0.45, cz);
   seat.castShadow = true;
-  furniture.add(seat);
+  diningSet.add(seat);
   const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.05, 0.43, 12), darkMat);
   leg.position.set(cx, 0.215, cz);
-  furniture.add(leg);
+  diningSet.add(leg);
 }
+
+/* ---------- Scene: TV montert på sørveggen — sofa midt i rommet ---------- */
+// Sofaen (Gorilla) vender mot sør, med skap/hylle i sofahøyde bak ryggen.
+const wallSet = new THREE.Group();
+furniture.add(wallSet);                  // følger Møbler-knappen
+const WTV_X = 4.85;                      // senterlinje for TV og sofa i stuedelen
+let sofaDist = 2.4;                      // avstand sofa (forkant) → TV-veggen
+let bakDepth = 0.35;                     // dybde på hylla bak sofaen
+let bakSkap = true;                      // true = med skap, false = åpen hylle
+const SOFA_L = 2.25, SOFA_H = 0.66;      // Gorilla: lengde og rygghøyde
+function buildWallSet(){
+  wallSet.clear();
+  // sofaDist måles fra TV-en til HODET når du sitter (over ryggputene),
+  // ikke til sofaens forkant. Hodet sitter ca. 0,95 m bak forkanten.
+  const HEAD_OFF = 0.95;
+  const frontZ = RD - sofaDist + HEAD_OFF;   // sofaens forkant (mot TV-en)
+  const baseC = frontZ - 0.575;          // sete-senter (dybde 1,15)
+  // Sofa vendt mot sør (rotert kopi av Gorillaen)
+  box(SOFA_L, 0.16, 1.15, sofaMat, WTV_X, 0.08, baseC, wallSet);            // base
+  box(SOFA_L, 0.50, 0.22, sofaMat, WTV_X, 0.41, frontZ-1.04, wallSet);      // ryggpanel
+  box(0.26, 0.42, 1.15, sofaMat, WTV_X-0.995, 0.37, baseC, wallSet);        // armlene vest
+  box(0.26, 0.42, 1.15, sofaMat, WTV_X+0.995, 0.37, baseC, wallSet);        // armlene øst
+  box(0.82, 0.22, 0.80, sofaMat, WTV_X-0.435, 0.27, frontZ-0.50, wallSet);  // setepute
+  box(0.82, 0.22, 0.80, sofaMat, WTV_X+0.435, 0.27, frontZ-0.50, wallSet);  // setepute
+  box(0.82, 0.50, 0.26, sofaMat, WTV_X-0.435, 0.63, frontZ-0.89, wallSet);  // ryggpute
+  box(0.82, 0.50, 0.26, sofaMat, WTV_X+0.435, 0.63, frontZ-0.89, wallSet);  // ryggpute
+  // Teppe og stuebord i den frie plassen mellom sofa og TV-vegg
+  const gap = RD - frontZ;                   // fri gulvplass foran sofaen
+  const rugD = Math.min(1.6, Math.max(0.5, gap - 0.15));
+  const rug2 = new THREE.Mesh(new THREE.PlaneGeometry(2.4, rugD), rugMat);
+  rug2.rotation.x = -Math.PI/2;
+  rug2.position.set(WTV_X, 0.005, frontZ + rugD/2 + 0.05);
+  rug2.receiveShadow = true;
+  wallSet.add(rug2);
+  if(gap >= 1.3){
+    const bz = frontZ + gap/2;               // bord midt i gapet
+    box(1.1, 0.05, 0.7, darkMat, WTV_X, 0.35, bz, wallSet);                 // bordplate
+    for(const [lx,lz] of [[-0.4,-0.25],[0.4,-0.25],[-0.4,0.25],[0.4,0.25]])
+      box(0.05, 0.33, 0.05, darkMat, WTV_X+lx, 0.165, bz+lz, wallSet);
+  }
+  // Skap/hylle bak sofaen — like lang og høy som sofaen, åpner mot spisedelen
+  const cabZ = frontZ - 1.15 - 0.02 - bakDepth/2;
+  if(bakSkap){
+    box(SOFA_L, SOFA_H-0.05, bakDepth, slatMat, WTV_X, (SOFA_H-0.05)/2+0.02, cabZ, wallSet);
+    box(SOFA_L+0.02, 0.03, bakDepth+0.02, darkMat, WTV_X, SOFA_H-0.015, cabZ, wallSet); // topplate
+    for(let i=1;i<4;i++)                                                     // dørspor mot nord
+      box(0.006, SOFA_H-0.16, 0.005, darkMat, WTV_X - SOFA_L/2 + i*SOFA_L/4, SOFA_H/2, cabZ - bakDepth/2 - 0.004, wallSet);
+  } else {
+    box(SOFA_L+0.02, 0.03, bakDepth+0.02, darkMat, WTV_X, SOFA_H-0.015, cabZ, wallSet); // topplate
+    box(SOFA_L, 0.03, bakDepth, slatMat, WTV_X, 0.05, cabZ, wallSet);                    // bunn
+    box(SOFA_L, 0.03, bakDepth, slatMat, WTV_X, SOFA_H/2, cabZ, wallSet);                // midthylle
+    for(const gx of [-SOFA_L/2+0.015, -SOFA_L/6, SOFA_L/6, SOFA_L/2-0.015])
+      box(0.03, SOFA_H-0.05, bakDepth, slatMat, WTV_X+gx, (SOFA_H-0.05)/2+0.02, cabZ, wallSet); // gavler
+  }
+}
+buildWallSet();
+wallSet.visible = false;
 
 /* ---------- Lys ---------- */
 const ambient = new THREE.AmbientLight(0xfff2e0, 0.4);
@@ -930,7 +1004,7 @@ const SOFA_FRONT = 5.38;                 // forkant av sofasetet
 function setDividerX(v){
   divider.position.x = v;
   hylle.position.x = v;
-  tvGroup.position.x = v + FR_D/2 + 0.02 + TV_D/2;
+  if(dividerType !== 'vegg') tvGroup.position.x = v + FR_D/2 + 0.02 + TV_D/2;
   tvBench.position.x = v;
   shelves.position.x = v;
   const toSofa = Math.max(0, SOFA_FRONT - (v + FR_D/2 + 0.02 + TV_D));
@@ -950,7 +1024,7 @@ function setDividerLen(v){
   const zC = RD - v/2;                    // alltid forankret i sørveggen
   divider.position.z = zC;
   hylle.position.z = zC;
-  tvGroup.position.z = zC;
+  if(dividerType !== 'vegg') tvGroup.position.z = zC;
   tvBench.position.z = zC;
   shelves.position.z = zC;
   buildDivider();
@@ -983,14 +1057,30 @@ const slatControls = document.getElementById('slatControls');
 const spileButtons = document.getElementById('spileButtons');
 function applyDividerType(){
   const spile = (dividerType === 'spile');
+  const vegg  = (dividerType === 'vegg');
   divider.visible = spile;
-  hylle.visible   = !spile;
+  hylle.visible   = dividerType === 'hylle';
   tvBench.visible = spile && benchMode !== 0;   // hylla har eget skap
   shelves.visible = spile && shelvesOn;
   slatControls.style.display = spile ? '' : 'none';
   spileButtons.style.display = spile ? '' : 'none';
-  fasongBox.style.display    = spile ? 'none' : '';
+  fasongBox.style.display    = dividerType === 'hylle' ? '' : 'none';
+  veggBox.style.display      = vegg ? '' : 'none';
+  sliderBox.style.display    = vegg ? 'none' : '';   // plassering/lengde gjelder romdeleren
+  // TV: på sørveggen i vegg-scenen, ellers på romdeleren
+  if(vegg){
+    tvGroup.rotation.y = Math.PI;                    // skjermen vender mot nord (sofaen)
+    tvGroup.position.set(WTV_X, 1.10, RD - 0.02 - TV_D/2);
+  } else {
+    tvGroup.rotation.y = Math.PI/2;
+    tvGroup.position.set(divider.position.x + FR_D/2 + 0.02 + TV_D/2, 1.10, divider.position.z);
+  }
+  sofaSet.visible = !vegg;
+  diningSet.visible = !vegg;
+  wallSet.visible = vegg;
 }
+const veggBox = document.getElementById('veggBox');
+const sliderBox = document.getElementById('sliderBox');
 const typeBtns = document.querySelectorAll('#typeBox .vbtns button');
 function setType(t){
   dividerType = t;
@@ -1028,6 +1118,27 @@ document.getElementById('btnModRemove').onclick = ()=>{
   updateModVal();
   buildHylle();
 };
+/* TV på vegg: avstand sofa→TV, hylledybde og med/uten skap */
+const distSlider = document.getElementById('distSlider');
+const depthSlider = document.getElementById('depthSlider');
+const distVal = document.getElementById('distVal');
+const depthVal = document.getElementById('depthVal');
+distSlider.addEventListener('input', ()=>{
+  sofaDist = parseFloat(distSlider.value);
+  distVal.textContent = sofaDist.toFixed(2).replace('.',',') + ' m';
+  buildWallSet();
+});
+depthSlider.addEventListener('input', ()=>{
+  bakDepth = parseFloat(depthSlider.value);
+  depthVal.textContent = Math.round(bakDepth*100) + ' cm';
+  buildWallSet();
+});
+const bakBtns = document.querySelectorAll('#veggBox [data-bak]');
+bakBtns.forEach(b=>b.onclick = ()=>{
+  bakSkap = b.dataset.bak === '1';
+  bakBtns.forEach(x=>x.classList.toggle('active', x===b));
+  buildWallSet();
+});
 applyDividerType();
 
 /* Fargevelgere: vegg+tak (samme farge), kjøkken og fliser */
@@ -1103,10 +1214,14 @@ function viewDivider(){
 // Mobil/iPad: samme kriterier som mobilmenyen
 const touchView = ()=>window.matchMedia('(max-width:640px), (pointer:coarse)').matches;
 const startView = ()=> touchView() ? viewDivider() : viewSofaCorner();
-// Fra sofaen — sittehøyde i sofaen, ser rett mot TV-en/romdeleren
+// Fra sofaen — sittehøyde i sofaen, ser rett mot TV-en
 function viewFromSofa(){
-  const dx = divider.position.x, dz = divider.position.z;
-  lookFrom(5.85, 1.12, 3.35,  dx, 1.10, dz);
+  if(dividerType === 'vegg'){
+    lookFrom(WTV_X, 1.12, RD - sofaDist,  WTV_X, 1.10, RD);   // hodeposisjonen
+  } else {
+    const dx = divider.position.x, dz = divider.position.z;
+    lookFrom(5.85, 1.12, 3.35,  dx, 1.10, dz);
+  }
 }
 btnViewSofa.onclick    = viewSofaCorner;
 btnViewKitchen.onclick = viewKitchenCorner;
@@ -1143,6 +1258,12 @@ function resetAll(){
   // Romdeler → spilevegg, fasong → hvit, hyllemoduler til standard
   hylleSeed=7;
   hylleModules.length=0; updateModVal();
+  // TV på vegg-scenen til standard
+  sofaDist=2.4; bakDepth=0.35; bakSkap=true;
+  distSlider.value=2.4; depthSlider.value=0.35;
+  distVal.textContent='2,40 m'; depthVal.textContent='35 cm';
+  bakBtns.forEach(x=>x.classList.toggle('active', x.dataset.bak==='1'));
+  buildWallSet();
   setFasong(0); setType('spile');
   // Vegger på
   walls.visible=true; btnWalls.innerHTML='<b>Vegger</b> · på'; btnWalls.classList.remove('off');
