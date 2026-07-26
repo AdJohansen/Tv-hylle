@@ -145,6 +145,8 @@
     <div class="vbtns">
       <button data-fasong="0" class="active">Hvit</button>
       <button data-fasong="1">Tre-grid</button>
+      <button data-fasong="2">Svart/tre</button>
+      <button data-fasong="3">Reol m/skyvedør</button>
     </div>
     <button id="btnShuffle" class="wbtn">Ny variant</button>
     <label><b>Tilleggsmoduler</b> · <span id="modVal">ingen</span></label>
@@ -270,6 +272,7 @@ const backsplashMat = new THREE.MeshStandardMaterial({color:0xf4f4f2, roughness:
 const worktopMat = new THREE.MeshStandardMaterial({color:0xecebe8, roughness:0.3});    // lys benkeplate
 const whiteMat = new THREE.MeshStandardMaterial({color:0xf1efe9, roughness:0.6});      // hvit hylle-ramme/skap
 const gridMat  = new THREE.MeshStandardMaterial({color:0x8f8b7d, roughness:0.5, metalness:0.35}); // metall-grid
+const blackPostMat = new THREE.MeshStandardMaterial({color:0x141414, roughness:0.45, metalness:0.4}); // slanke svarte stolper
 const steelMat   = new THREE.MeshStandardMaterial({color:0x9a9da0, roughness:0.35, metalness:0.6}); // stål
 const darkMat  = new THREE.MeshStandardMaterial({color:0x1a1a1a, roughness:0.4});
 const sofaMat  = new THREE.MeshStandardMaterial({color:0x3d2b1d, roughness:0.94}); // Sweef Gorilla · Lincoln Mørkebrun 29
@@ -538,10 +541,146 @@ function buildHylle(){
   hylle.clear();
   const zN = -DIV_LEN/2, zS = DIV_LEN/2;
   const white = (hylleFasong === 0);
-  const frM = white ? whiteMat : gridMat;   // ramme/stolper
-  const shM = white ? whiteMat : slatMat;   // hylleplater
-  const caM = white ? whiteMat : slatMat;   // bunnskap
-  const DEP = 0.30, POST = 0.05;
+  const loft  = (hylleFasong === 2);
+  const ikea  = (hylleFasong === 3);
+  const frM = loft ? blackPostMat : (white ? whiteMat : gridMat);   // ramme/stolper
+  const shM = loft ? slatMat : (white ? whiteMat : slatMat);        // hylleplater
+  const caM = loft ? slatMat : (white ? whiteMat : slatMat);        // bunnskap
+  const DEP = 0.30, POST = loft ? 0.03 : 0.05;
+  const rng = mulberry32(hylleSeed);        // variasjon i utstikk-hyllene
+  const inner0 = zN + 0.03, inner1 = zS - 0.03;
+  if(ikea){
+    /* Fasong 4 — reol med skyvedører (198 × 35 × 212,4 cm).
+       Seksjoner langs lengden: smal (34) inntil veggen, så to brede (76,4).
+       De fire midtre rommene er skåret ut til en plate der TV-en festes. */
+    const D = 0.35, HT = 2.124, UP = 0.028, ST = 0.02, PL = 0.111;
+    const xF = D/2;                                   // front (mot stuen, +x)
+    // z-inndeling — utskjæringen er sentrert på TV-en (lokal z = 0)
+    const cutA = -0.778, cutB = 0.778;                // de to brede feltene
+    const zEndFree = cutA - UP;                       // ytterkant frie enden
+    const zEndWall = cutB + UP + 0.34 + UP;           // ytterkant mot veggen (+1,174)
+    const uprightZ = [zEndFree+UP/2, cutA+UP/2, 0, cutB+UP/2, zEndWall-UP/2];
+    // Hyllenivåer: sokkel + 4 etasjer à ca. 45 cm
+    const tierH = (HT - PL - 5*ST)/4;
+    const shelfY = [0,1,2,3,4].map(i=> PL + i*(tierH+ST));
+    const cutY0 = shelfY[1]+ST, cutY1 = shelfY[3];    // TV-åpningen (2 etasjer høy)
+    // Sokkel — trukket litt inn slik at reolen ser ut til å stå på en list
+    box(D-0.04, PL, zEndWall-zEndFree-0.02, darkMat, 0, PL/2, (zEndFree+zEndWall)/2, hylle);
+    // Vertikale sidestykker og mellomvegger
+    for(const uz of uprightZ){
+      if(uz === 0){                                   // midtveggen er delt av TV-åpningen
+        box(D, cutY0-PL, UP, shM, 0, PL+(cutY0-PL)/2, uz, hylle);
+        box(D, HT-cutY1, UP, shM, 0, cutY1+(HT-cutY1)/2, uz, hylle);
+      } else {
+        box(D, HT-PL, UP, shM, 0, PL+(HT-PL)/2, uz, hylle);
+      }
+    }
+    // Horisontale hyller — hopper over de to brede feltene inne i TV-åpningen
+    for(const sy of shelfY){
+      const inCut = sy > cutY0-ST && sy < cutY1;
+      if(!inCut){
+        box(D, ST, zEndWall-zEndFree, shM, 0, sy+ST/2, (zEndFree+zEndWall)/2, hylle);
+      } else {                                        // kun i det smale feltet ved veggen
+        const na = cutB+UP, nb = zEndWall-UP;
+        box(D, ST, nb-na, shM, 0, sy+ST/2, (na+nb)/2, hylle);
+      }
+    }
+    box(D, ST, zEndWall-zEndFree, shM, 0, HT-ST/2, (zEndFree+zEndWall)/2, hylle);  // topplate
+    // Plate for TV-feste i utskjæringen
+    box(0.03, cutY1-cutY0, cutB-cutA, shM, -0.10, (cutY0+cutY1)/2, 0, hylle);
+    // Skyvedører i nederste etasje (foran de to brede feltene)
+    const dY0 = shelfY[0]+ST, dY1 = shelfY[1], dH = dY1-dY0;
+    for(const [da, db, off] of [[cutA, 0, 0.012],[0, cutB, 0.026]]){
+      box(0.018, dH-0.01, db-da-0.01, caM, xF-off, dY0+dH/2, (da+db)/2, hylle);
+      box(0.012, 0.05, 0.10, darkMat, xF-off+0.012, dY0+dH/2, db-0.12, hylle);   // grep
+    }
+  } else if(loft){
+    /* Fasong 3 — frittstående romdeler: massiv tresokkel, slanke svarte
+       stolper, tykke plankehyller, og et todelt bakstykke der den ene
+       halvdelen er helt åpen og den andre har mørkt rillepanel. */
+    const CD = 0.50, cH = 0.62;                                     // sokkeldybde/-høyde
+    box(CD, cH, DIV_LEN, caM, 0, cH/2, 0, hylle);                   // massiv sokkel
+    box(CD+0.03, 0.03, DIV_LEN+0.03, caM, 0, cH+0.015, 0, hylle);   // topplate m/ overheng
+    box(0.014, 0.10, 0.10, darkMat, CD/2+0.008, cH-0.22, DIV_LEN*0.22, hylle); // lukedetalj
+    // Mørkt rillepanel — dekker TV-sonen og videre inn mot veggen.
+    // Den frie enden (mot stuen) står åpen så du ser rett igjennom.
+    const panA = Math.max(inner0, -0.80), panB = inner1;
+    box(0.045, RH-cH-0.10, panB-panA, tvBodyMat, 0, cH+(RH-cH-0.10)/2, (panA+panB)/2, hylle);
+    for(let gy = cH+0.16; gy < RH-0.16; gy += 0.075)               // fine horisontale riller
+      box(0.052, 0.006, panB-panA-0.02, darkMat, 0, gy, (panA+panB)/2, hylle);
+    // Slanke svarte stolper — endene gulv→tak, de indre fra sokkelen og opp
+    const nP = 4;
+    for(let i=0;i<=nP;i++){
+      const pz = inner0 + i*(inner1-inner0)/nP;
+      const end = (i===0 || i===nP);
+      const y0 = end ? 0 : cH, h = RH - y0;
+      box(POST, h, POST, frM,  DEP/2, y0+h/2, pz, hylle);
+      box(POST, h, POST, frM, -DEP/2, y0+h/2, pz, hylle);
+    }
+    // Hyllenivåer: tykke plankehyller. Over TV-en går de i full lengde;
+    // de tre nederste finnes bare i de åpne sidefeltene ved siden av TV-en.
+    const SH_T = 0.055;                                             // tykke planker
+    const upper = [1.66, 1.98, 2.30], lower = [0.82, 1.10, 1.38];
+    for(const sy of upper)
+      box(DEP+0.04, SH_T, inner1-inner0, shM, 0, sy, 0, hylle);
+    const tvHalf = 0.76;
+    for(const [sa, sb] of [[inner0, -tvHalf],[tvHalf, inner1]]){
+      if(sb - sa < 0.30) continue;
+      for(const sy of lower)
+        box(DEP+0.04, SH_T, sb-sa, shM, 0, sy, (sa+sb)/2, hylle);
+    }
+    /* Dekor: bøker, keramikk, vaser og planter — frodigst øverst.
+       Fordelingen varierer med "Ny variant". */
+    const potM   = new THREE.MeshStandardMaterial({color:0x2b2b2b, roughness:0.85});
+    const potM2  = new THREE.MeshStandardMaterial({color:0x8a5a44, roughness:0.8});
+    const leafM  = new THREE.MeshStandardMaterial({color:0x4f7f45, roughness:0.9});
+    const bookM  = new THREE.MeshStandardMaterial({color:0xd8d2c6, roughness:0.9});
+    const glassM = new THREE.MeshStandardMaterial({color:0xd7e2e6, roughness:0.15,
+      metalness:0.2, transparent:true, opacity:0.55});
+    function plant(py, pz, scale, hanging){
+      const pot = new THREE.Mesh(new THREE.CylinderGeometry(0.055*scale, 0.045*scale, 0.10*scale, 14),
+        rng() > 0.7 ? potM2 : potM);
+      pot.position.set(0, py + 0.05*scale, pz); pot.castShadow = true; hylle.add(pot);
+      for(let i=0;i<5;i++){                                        // buskete løvverk
+        const r = 0.05*scale + rng()*0.045*scale;
+        const leaf = new THREE.Mesh(new THREE.SphereGeometry(r, 8, 6), leafM);
+        leaf.position.set((rng()-0.5)*0.11*scale,
+                          py + 0.11*scale + rng()*0.10*scale,
+                          pz + (rng()-0.5)*0.16*scale);
+        hylle.add(leaf);
+      }
+      if(hanging){                                                 // ranker ned foran hylla
+        const vl = 0.20 + rng()*0.22;
+        box(0.012, vl, 0.012, leafM, (rng()-0.5)*0.08, py - vl/2, pz + 0.05, hylle);
+      }
+    }
+    function decorate(sy, za, zb, lush){
+      const n = 2 + Math.floor(rng()*2);
+      for(let i=0;i<n;i++){
+        const pz = za + (zb-za)*((i+0.5)/n) + (rng()-0.5)*0.06;
+        const r = rng();
+        if(lush && r < 0.55){ plant(sy+SH_T/2, pz, 0.9+rng()*0.5, rng()>0.5); }
+        else if(r < 0.72){                                         // stablede bøker
+          const bh = 0.03 + rng()*0.03;
+          box(0.17, bh, 0.13, bookM, 0, sy+SH_T/2+bh/2, pz, hylle);
+        } else if(r < 0.88){                                       // slank vase
+          const vh = 0.14 + rng()*0.14;
+          const v = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.045, vh, 12), potM);
+          v.position.set(0, sy+SH_T/2+vh/2, pz); v.castShadow = true; hylle.add(v);
+        } else {                                                   // liten glassflaske
+          const gh = 0.08 + rng()*0.06;
+          const g = new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.026, gh, 10), glassM);
+          g.position.set(0, sy+SH_T/2+gh/2, pz); hylle.add(g);
+        }
+      }
+    }
+    decorate(cH+0.015, inner0, inner1, false);                     // oppå sokkelen
+    upper.forEach((sy,i)=>decorate(sy, inner0, inner1, i >= 1));   // frodigere jo høyere
+    for(const [sa, sb] of [[inner0, -tvHalf],[tvHalf, inner1]]){
+      if(sb - sa < 0.30) continue;
+      lower.forEach((sy,i)=>decorate(sy, sa, sb, i === 2));
+    }
+  } else {
   // Bunnskap (sideboard) med dører — følger romdelerens lengde
   const cy0 = 0.14, cyT = 0.68, ch = cyT - cy0;
   const caL = DIV_LEN - 0.1;
@@ -556,7 +695,6 @@ function buildHylle(){
   // Feltet over TV-en er alltid 1 hyllenivå × 2 felt.
   const TV_TOP = 1.72;                                    // TV-sonen er åpen opp hit
   const segH = RH - TV_TOP;
-  const inner0 = zN + 0.03, inner1 = zS - 0.03;
   const midPost = (inner0 + inner1)/2;
   for(const [pz, end] of [[inner0,true],[midPost,false],[inner1,true]]){
     const h  = end ? RH : segH;                           // ender: gulv→tak, midt: over TV
@@ -566,7 +704,6 @@ function buildHylle(){
     if(!white) box(DEP, POST, POST, frM, 0, RH-0.42, pz, hylle);   // tverrbånd
   }
   // Én hyllerad over TV-en, delt i to felt av midtstolpen
-  const rng = mulberry32(hylleSeed);                      // brukes av utstikk-hyllene
   const sy = 2.00;
   for(const [sza, szb] of [[inner0+POST/2, midPost-POST/2],[midPost+POST/2, inner1-POST/2]])
     box(white ? DEP+0.02 : DEP, 0.035, szb-sza, shM, 0, sy, (sza+szb)/2, hylle);
@@ -581,6 +718,7 @@ function buildHylle(){
     const uL = 0.30 + rng()*0.30;
     box(DEP+0.02, 0.035, uL, shM, 0, uy, zN - uL/2 + 0.03, hylle);
     box(0.02, 0.10, 0.02, frM, DEP/2, uy-0.07, zN - uL + 0.08, hylle); // tynn stag under tuppen
+  }
   }
   // Tilleggsmoduler — stables utover fra den frie enden (mot stuen)
   const sisalM = new THREE.MeshStandardMaterial({color:0xc9ab7c, roughness:0.95});
@@ -1091,7 +1229,12 @@ typeBtns.forEach(b=>b.onclick = ()=>setType(b.dataset.type));
 const fasongBtns = document.querySelectorAll('#fasongBox .vbtns button');
 function setFasong(i){
   hylleFasong = i;
-  buildHylle();
+  if(i === 3){                      // reolen er 198 cm bred + TV sentrert i utskjæringen,
+    lenSlider.value = 2.35;         // så lengden må være 2,35 m for at det smale
+    setDividerLen(2.35);            // feltet skal stå flush mot veggen
+  } else {
+    buildHylle();
+  }
   fasongBtns.forEach(b=>b.classList.toggle('active', parseInt(b.dataset.fasong)===i));
 }
 fasongBtns.forEach(b=>b.onclick = ()=>setFasong(parseInt(b.dataset.fasong)));
